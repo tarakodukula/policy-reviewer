@@ -741,9 +741,12 @@ function PoliciesPage() {
 
                   <div className="policy-name-cell">
 
-                    <strong>
+                    <Link
+                      to={`/policies/${policy.id}`}
+                      className="policy-name-link"
+                    >
                       {policy.name}
-                    </strong>
+                    </Link>
 
 
                     <p>

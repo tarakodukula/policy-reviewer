@@ -1,5 +1,11 @@
 import './App.css'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom'
+
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import PolicyReviewPage from './pages/PolicyReviewPage'
@@ -12,14 +18,19 @@ import GuidelinesPage from './pages/GuidelinesPage'
 import NewGuidelinePage from './pages/NewGuidelinePage'
 import PoliciesPage from './pages/PoliciesPage'
 import NewPolicyPage from './pages/NewPolicyPage'
+import PolicyDetailsPage from './pages/PolicyDetailsPage'
 
 
 function App() {
   return (
     <BrowserRouter>
+
       <Routes>
 
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
 
         <Route
           path="/dashboard"
@@ -27,61 +38,72 @@ function App() {
         />
 
         <Route
-        path="/reviews"
-        element={<PolicyReviewPage />}
+          path="/reviews"
+          element={<PolicyReviewPage />}
         />
 
         <Route
-        path="/reviews/new"
-        element={<NewPolicyReviewPage />}
+          path="/reviews/new"
+          element={<NewPolicyReviewPage />}
         />
 
         <Route
-        path="/reviews/new/select-policies"
-        element={<PolicySelectionPage />}
+          path="/reviews/new/select-policies"
+          element={<PolicySelectionPage />}
         />
 
         <Route
-        path="/reviews/new/select-guidelines"
-        element={<GuidelineSelectionPage />}
+          path="/reviews/new/select-guidelines"
+          element={<GuidelineSelectionPage />}
         />
 
         <Route
-        path="/reviews/findings"
-        element={<ReviewFindingsPage />}
+          path="/reviews/findings"
+          element={<ReviewFindingsPage />}
         />
 
         <Route
-        path="/reviews/findings/:findingId/edit"
-        element={<PolicyReviewEditingPage />}
+          path="/reviews/findings/:findingId/edit"
+          element={<PolicyReviewEditingPage />}
         />
 
         <Route
-        path="/guidelines"
-        element={<GuidelinesPage />}
+          path="/guidelines"
+          element={<GuidelinesPage />}
         />
 
         <Route
-        path="/guidelines/new"
-        element={<NewGuidelinePage />}
+          path="/guidelines/new"
+          element={<NewGuidelinePage />}
         />
 
         <Route
-        path="/policies"
-        element={<PoliciesPage />}
+          path="/policies"
+          element={<PoliciesPage />}
         />
 
         <Route
-        path="/policies/new"
-        element={<NewPolicyPage />}
+          path="/policies/new"
+          element={<NewPolicyPage />}
+        />
+
+        <Route
+          path="/policies/:policyId"
+          element={<PolicyDetailsPage />}
         />
 
         <Route
           path="/"
-          element={<Navigate to="/login" replace />}
+          element={
+            <Navigate
+              to="/login"
+              replace
+            />
+          }
         />
 
       </Routes>
+
     </BrowserRouter>
   )
 }
