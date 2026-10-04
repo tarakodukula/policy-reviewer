@@ -3734,3 +3734,575 @@
 .complete-review-button:hover {
   opacity: 0.9;
 }
+
+/* =========================================================
+   CLEVELAND CLINIC DESIGN SYSTEM
+   Primary palette = main interface
+   Secondary palette = highlights/statuses only
+   ========================================================= */
+
+:root {
+  /* PRIMARY INTERFACE COLORS */
+  --cc-green: #007a33;
+  --cc-blue: #0066b3;
+  --cc-black: #1a1a1a;
+  --cc-white: #ffffff;
+
+  /* SUPPORTING NEUTRALS */
+  --cc-page: #f5f7f8;
+  --cc-surface: #ffffff;
+  --cc-border: #d5dadd;
+  --cc-muted: #5f6b73;
+  --cc-light-blue: #eaf4fa;
+  --cc-light-green: #e9f5ef;
+
+  /*
+     SECONDARY / HIGHLIGHT COLORS
+
+     These are intentionally reserved for:
+     - statuses
+     - priorities
+     - recommendations
+     - alerts
+     - selected/highlighted information
+  */
+  --cc-highlight-blue: #dceef8;
+  --cc-highlight-green: #dff2e8;
+  --cc-highlight-yellow: #fff2cc;
+  --cc-highlight-red: #f9dddd;
+  --cc-highlight-gray: #e9ecef;
+}
+
+
+/* =========================================================
+   GLOBAL TYPOGRAPHY
+   ========================================================= */
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+}
+
+.app-page,
+.login-page,
+.policy-selection-page,
+.selection-background,
+.policy-selection-modal,
+.review-findings-content,
+.policy-editor-content,
+.guidelines-content,
+.policies-content,
+.new-guideline-content,
+.new-policy-content {
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+  color: var(--cc-black);
+}
+
+
+/* =========================================================
+   MAIN PAGE BACKGROUNDS
+   ========================================================= */
+
+body,
+.login-page,
+.app-page,
+.new-review-content,
+.policy-selection-page,
+.selection-background-content,
+.review-findings-content,
+.policy-editor-content,
+.guidelines-content,
+.policies-content,
+.new-guideline-content,
+.new-policy-content {
+  background-color: var(--cc-page);
+}
+
+
+/* =========================================================
+   LOGIN PAGE
+   ========================================================= */
+
+.login-page {
+  color: var(--cc-black);
+}
+
+.login-box {
+  background: var(--cc-white);
+  border: 1px solid var(--cc-border);
+  border-top: 5px solid var(--cc-green);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.login-box h1 {
+  color: var(--cc-black);
+  font-weight: 700;
+}
+
+.login-links a {
+  color: var(--cc-blue);
+}
+
+.form-group label {
+  color: var(--cc-black);
+  font-weight: 500;
+}
+
+.form-group input {
+  border-color: var(--cc-border);
+  background: var(--cc-white);
+  color: var(--cc-black);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--cc-blue);
+  box-shadow: 0 0 0 2px rgba(0, 102, 179, 0.12);
+}
+
+.remember-me input {
+  accent-color: var(--cc-green);
+}
+
+.login-box button {
+  background: var(--cc-green);
+  border: 1px solid var(--cc-green);
+  color: var(--cc-white);
+}
+
+.login-box button:hover {
+  background: #00662b;
+}
+
+
+/* =========================================================
+   TOP HEADER
+   ========================================================= */
+
+.top-bar {
+  background: var(--cc-green);
+  color: var(--cc-white);
+}
+
+.brand-name,
+.workspace-name,
+.top-icon,
+.user-area {
+  color: var(--cc-white);
+}
+
+.brand-divider {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.search-box {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.search-box input {
+  color: var(--cc-white);
+}
+
+.search-box input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.user-avatar {
+  background: var(--cc-white);
+  color: var(--cc-green);
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar {
+  background: var(--cc-white);
+  border-right-color: var(--cc-border);
+}
+
+.nav-item {
+  color: #40484d;
+}
+
+.nav-item:hover {
+  background: var(--cc-light-blue);
+  color: var(--cc-blue);
+}
+
+.nav-item.active {
+  background: var(--cc-light-blue);
+  color: var(--cc-blue);
+  border-left-color: var(--cc-blue);
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+.back-link,
+.review-name,
+.selection-policy-name strong,
+.guideline-name-cell strong {
+  color: var(--cc-blue);
+}
+
+
+/* =========================================================
+   MAIN CARDS / SURFACES
+   ========================================================= */
+
+.stat-card,
+.reviews-card,
+.recommendation-card,
+.new-review-card,
+.background-card,
+.selection-table,
+.findings-selection-summary,
+.findings-filter-bar,
+.findings-table,
+.editor-card,
+.guidelines-table,
+.policies-table,
+.selected-guideline-item,
+.selected-policy-file {
+  background: var(--cc-white);
+  border-color: var(--cc-border);
+}
+
+
+/* =========================================================
+   TABLE HEADERS
+   ========================================================= */
+
+.review-table-header,
+.policy-review-header,
+.selection-table-header,
+.findings-table-header,
+.editor-table-header,
+.guidelines-table-header,
+.policies-table-header {
+  background: #eef3f5;
+  color: #44525b;
+}
+
+
+/* =========================================================
+   FORM CONTROLS
+   ========================================================= */
+
+.review-search,
+.sort-area select,
+.review-name-input,
+.findings-sort select,
+.guidelines-search,
+.guidelines-sort select,
+.policies-search,
+.policies-sort select,
+.guideline-name-input,
+.policy-name-input {
+  background: var(--cc-white);
+  border-color: var(--cc-border);
+  color: var(--cc-black);
+}
+
+.review-search:focus,
+.review-name-input:focus,
+.guidelines-search:focus-within,
+.policies-search:focus-within,
+.guideline-name-input:focus,
+.policy-name-input:focus {
+  border-color: var(--cc-blue);
+  outline: none;
+}
+
+
+/* =========================================================
+   PRIMARY ACTION BUTTONS
+   Main palette
+   ========================================================= */
+
+.new-review-button,
+.start-review-button,
+.confirm-selection-button,
+.upload-documents-button,
+.complete-review-button {
+  background: var(--cc-green);
+  border-color: var(--cc-green);
+  color: var(--cc-white);
+}
+
+.new-review-button:hover,
+.start-review-button:hover,
+.confirm-selection-button:hover,
+.upload-documents-button:hover,
+.complete-review-button:hover {
+  background: #00662b;
+}
+
+
+/* =========================================================
+   SECONDARY / OUTLINE ACTIONS
+   ========================================================= */
+
+.outline-action-button,
+.view-edit-report-button {
+  background: var(--cc-white);
+  border-color: var(--cc-blue);
+  color: var(--cc-blue);
+}
+
+.outline-action-button:hover,
+.view-edit-report-button:hover {
+  background: var(--cc-light-blue);
+}
+
+
+/* =========================================================
+   SELECTED FILTERS
+   ========================================================= */
+
+.filter-buttons button.selected,
+.guidelines-filter-buttons button.active,
+.policies-filter-buttons button.active,
+.finding-filter-button.active {
+  background: var(--cc-blue);
+  border-color: var(--cc-blue);
+  color: var(--cc-white);
+}
+
+.filter-buttons button:hover,
+.guidelines-filter-buttons button:hover,
+.policies-filter-buttons button:hover,
+.finding-filter-button:hover {
+  background: var(--cc-light-blue);
+}
+
+
+/* =========================================================
+   CHECKBOXES / RADIO BUTTONS
+   ========================================================= */
+
+input[type="checkbox"],
+input[type="radio"],
+.guideline-option input,
+.selection-checkbox-cell input[type="checkbox"] {
+  accent-color: var(--cc-green);
+}
+
+
+/* =========================================================
+   STATUS HIGHLIGHTS
+   Secondary palette only
+   ========================================================= */
+
+.status.completed {
+  background: var(--cc-highlight-green);
+  color: #17633b;
+}
+
+.status.in-review {
+  background: var(--cc-highlight-yellow);
+  color: #765700;
+}
+
+
+/* =========================================================
+   FINDING / RECOMMENDATION HIGHLIGHTS
+   Secondary palette only
+   ========================================================= */
+
+.recommendation-type.change {
+  background: var(--cc-highlight-blue);
+  color: #075f91;
+}
+
+.recommendation-type.add {
+  background: var(--cc-highlight-green);
+  color: #17633b;
+}
+
+.recommendation-type.remove {
+  background: var(--cc-highlight-red);
+  color: #8c2f2f;
+}
+
+.recommendation-priority.high {
+  background: var(--cc-highlight-red);
+  color: #8c2f2f;
+}
+
+.recommendation-priority.medium {
+  background: var(--cc-highlight-yellow);
+  color: #765700;
+}
+
+.recommendation-priority.low {
+  background: var(--cc-highlight-gray);
+  color: #4f5b62;
+}
+
+.finding-unread {
+  color: var(--cc-green);
+}
+
+
+/* =========================================================
+   DASHBOARD CHART / PROGRESS HIGHLIGHTS
+   Secondary colors can distinguish data
+   ========================================================= */
+
+.progress.criteria {
+  background: var(--cc-green);
+}
+
+.progress.mismatch {
+  background: var(--cc-blue);
+}
+
+.progress.evidence {
+  background: #6c757d;
+}
+
+
+/* =========================================================
+   UPLOAD / SELECTION AREAS
+   ========================================================= */
+
+.upload-area {
+  background: var(--cc-white);
+  border-color: #aebbc3;
+}
+
+.upload-area strong {
+  color: var(--cc-blue);
+}
+
+
+/* =========================================================
+   POLICY / GUIDELINE CONTENT
+   ========================================================= */
+
+.finding-policy-column strong,
+.finding-guideline-column strong,
+.editor-policy-column strong,
+.editor-guideline-column strong,
+.recommendation-text {
+  color: var(--cc-blue);
+}
+
+.finding-criterion,
+.editor-policy-column > span,
+.editor-guideline-column > span,
+.proposed-change-label {
+  color: var(--cc-muted);
+}
+
+.proposed-change-box {
+  background: var(--cc-light-blue);
+  border-color: #b7d6e8;
+  color: #44525b;
+}
+
+
+/* =========================================================
+   EDITOR
+   ========================================================= */
+
+.policy-editor-textarea {
+  background: var(--cc-white);
+  border-color: var(--cc-border);
+  color: var(--cc-black);
+}
+
+.policy-editor-textarea:focus {
+  border-color: var(--cc-blue);
+}
+
+
+/* =========================================================
+   CANCEL / DESTRUCTIVE ACTIONS
+   Secondary palette highlight
+   ========================================================= */
+
+.cancel-review-button,
+.cancel-guideline-button,
+.cancel-policy-button {
+  background: var(--cc-white);
+  border: 1px solid #b9c0c5;
+  color: var(--cc-black);
+}
+
+.cancel-review-button:hover,
+.cancel-guideline-button:hover,
+.cancel-policy-button:hover {
+  background: #f0f2f3;
+}
+
+.delete-policy-button,
+.delete-guideline-button,
+.selected-policy-file button,
+.selected-guideline-item button {
+  color: #9a3030;
+}
+
+
+/* =========================================================
+   MODALS
+   ========================================================= */
+
+.policy-selection-modal {
+  background: var(--cc-white);
+  border-color: var(--cc-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+}
+
+.selection-table-header {
+  background: #eef3f5;
+}
+
+
+/* =========================================================
+   GLOBAL FONT OVERRIDE
+   Keeps older page-specific Arial rules from taking priority
+   ========================================================= */
+
+.login-page,
+.login-page *,
+.app-page,
+.app-page *,
+.policy-selection-page,
+.policy-selection-page *,
+.policy-selection-modal,
+.policy-selection-modal *,
+.review-findings-content,
+.review-findings-content *,
+.policy-editor-content,
+.policy-editor-content *,
+.guidelines-content,
+.guidelines-content *,
+.policies-content,
+.policies-content *,
+.new-guideline-content,
+.new-guideline-content *,
+.new-policy-content,
+.new-policy-content * {
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+}
