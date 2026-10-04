@@ -3702,3 +3702,35 @@
   color: #08775a;
   text-decoration: underline;
 }
+
+/* =========================================
+   COMPLETE REVIEW
+========================================= */
+
+.findings-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.findings-title-row h1 {
+  margin-bottom: 6px;
+}
+
+.complete-review-button {
+  border: none;
+  border-radius: 4px;
+  background: #08775a;
+  color: white;
+  padding: 10px 18px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.complete-review-button:hover {
+  opacity: 0.9;
+}
