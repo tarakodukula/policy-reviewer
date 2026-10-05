@@ -40,11 +40,29 @@ function ReviewFindingsPage() {
     useState('All')
 
   // ==========================================
-  // DEMONSTRATION SCREENING RESULTS
+  // SAVED REVIEWER DECISIONS
   // ==========================================
 
-  // These are prototype results that simulate
-  // the output of an automated policy screening.
+  const recommendationDecisions =
+    JSON.parse(
+      localStorage.getItem(
+        'recommendationDecisions'
+      )
+    ) || []
+
+  function getDecision(result) {
+    return recommendationDecisions.find(
+      (decision) =>
+        String(decision.reviewId) ===
+          String(currentReview?.id || null) &&
+        String(decision.findingId) ===
+          String(result.id)
+    )
+  }
+
+  // ==========================================
+  // DEMONSTRATION SCREENING RESULTS
+  // ==========================================
 
   const policyOne =
     selectedPolicies[0]?.name ||
@@ -202,12 +220,25 @@ function ReviewFindingsPage() {
   const noChangeCount =
     results.filter(
       (result) =>
-        result.status === 'No Change Needed'
+        result.status ===
+        'No Change Needed'
     ).length
 
   const actionCount =
-    highPriorityCount +
-    lowPriorityCount
+    results.filter(
+      (result) =>
+        result.status ===
+          'Suggested Change' &&
+        !getDecision(result)
+    ).length
+
+  const decidedCount =
+    results.filter(
+      (result) =>
+        result.status ===
+          'Suggested Change' &&
+        getDecision(result)
+    ).length
 
   // ==========================================
   // FILTER RESULTS
@@ -219,7 +250,27 @@ function ReviewFindingsPage() {
         return true
       }
 
-      if (activeFilter === 'High Priority') {
+      if (
+        activeFilter ===
+        'Needs Attention'
+      ) {
+        return (
+          result.status ===
+            'Suggested Change' &&
+          !getDecision(result)
+        )
+      }
+
+      if (activeFilter === 'Decided') {
+        return Boolean(
+          getDecision(result)
+        )
+      }
+
+      if (
+        activeFilter ===
+        'High Priority'
+      ) {
         return (
           result.status ===
             'Suggested Change' &&
@@ -227,7 +278,10 @@ function ReviewFindingsPage() {
         )
       }
 
-      if (activeFilter === 'Low Priority') {
+      if (
+        activeFilter ===
+        'Low Priority'
+      ) {
         return (
           result.status ===
             'Suggested Change' &&
@@ -273,13 +327,28 @@ function ReviewFindingsPage() {
       return
     }
 
-    const confirmed =
-      window.confirm(
-        'Are you sure you want to mark this review session as completed?'
-      )
+    if (actionCount > 0) {
+      const continueAnyway =
+        window.confirm(
+          `${actionCount} ${
+            actionCount === 1
+              ? 'recommendation still requires'
+              : 'recommendations still require'
+          } a reviewer decision. Complete this review session anyway?`
+        )
 
-    if (!confirmed) {
-      return
+      if (!continueAnyway) {
+        return
+      }
+    } else {
+      const confirmed =
+        window.confirm(
+          'All recommendations have been reviewed. Mark this review session as completed?'
+        )
+
+      if (!confirmed) {
+        return
+      }
     }
 
     const completedReview = {
@@ -493,7 +562,8 @@ function ReviewFindingsPage() {
             <div
               style={{
                 background: '#ffffff',
-                border: '1px solid #dddddd',
+                border:
+                  '1px solid #dddddd',
                 borderRadius: '6px',
                 padding: '18px',
               }}
@@ -522,7 +592,8 @@ function ReviewFindingsPage() {
             <div
               style={{
                 background: '#fff7f7',
-                border: '1px solid #e6b7b7',
+                border:
+                  '1px solid #e6b7b7',
                 borderRadius: '6px',
                 padding: '18px',
               }}
@@ -552,7 +623,8 @@ function ReviewFindingsPage() {
             <div
               style={{
                 background: '#fffaf0',
-                border: '1px solid #e5d2a6',
+                border:
+                  '1px solid #e5d2a6',
                 borderRadius: '6px',
                 padding: '18px',
               }}
@@ -582,7 +654,8 @@ function ReviewFindingsPage() {
             <div
               style={{
                 background: '#f4faf5',
-                border: '1px solid #b9d7bd',
+                border:
+                  '1px solid #b9d7bd',
                 borderRadius: '6px',
                 padding: '18px',
               }}
@@ -611,10 +684,10 @@ function ReviewFindingsPage() {
           </section>
 
           {/* ==================================
-              ACTION BANNER
+              REVIEW STATUS BANNER
           ================================== */}
 
-          {actionCount > 0 && (
+          {actionCount > 0 ? (
             <section
               style={{
                 padding: '14px 18px',
@@ -662,6 +735,53 @@ function ReviewFindingsPage() {
                 }}
               >
                 ACTION REQUIRED
+              </span>
+            </section>
+          ) : (
+            <section
+              style={{
+                padding: '14px 18px',
+                marginBottom: '20px',
+                background: '#f4faf5',
+                border:
+                  '1px solid #b9d7bd',
+                borderLeft:
+                  '4px solid #4e8b59',
+                borderRadius: '4px',
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems: 'center',
+                gap: '20px',
+              }}
+            >
+              <div>
+                <strong>
+                  All recommendations have been
+                  reviewed.
+                </strong>
+
+                <div
+                  style={{
+                    fontSize: '13px',
+                    color: '#666',
+                    marginTop: '3px',
+                  }}
+                >
+                  This review session is ready to
+                  be completed.
+                </div>
+              </div>
+
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: '#387644',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                REVIEW COMPLETE
               </span>
             </section>
           )}
@@ -748,6 +868,14 @@ function ReviewFindingsPage() {
                 count: results.length,
               },
               {
+                name: 'Needs Attention',
+                count: actionCount,
+              },
+              {
+                name: 'Decided',
+                count: decidedCount,
+              },
+              {
                 name: 'High Priority',
                 count:
                   highPriorityCount,
@@ -803,29 +931,49 @@ function ReviewFindingsPage() {
                   result.priority ===
                   'High'
 
-                const lowPriority =
-                  result.priority ===
-                  'Low'
-
                 const noChange =
                   result.status ===
                   'No Change Needed'
+
+                const decision =
+                  getDecision(result)
+
+                const isAccepted =
+                  decision?.decision ===
+                    'Accepted' ||
+                  decision?.decision ===
+                    'Accepted with Edits'
+
+                const isRejected =
+                  decision?.decision ===
+                  'Rejected'
 
                 return (
                   <div
                     key={result.id}
                     style={{
                       background: '#ffffff',
-                      border: noChange
+
+                      border: decision
+                        ? isAccepted
+                          ? '1px solid #b9d7bd'
+                          : '1px solid #d4d4d4'
+                        : noChange
                         ? '1px solid #b9d7bd'
                         : highPriority
                         ? '1px solid #dfb0b0'
                         : '1px solid #e2d0a6',
-                      borderLeft: noChange
+
+                      borderLeft: decision
+                        ? isAccepted
+                          ? '5px solid #4e8b59'
+                          : '5px solid #777777'
+                        : noChange
                         ? '5px solid #4e8b59'
                         : highPriority
                         ? '5px solid #b53939'
                         : '5px solid #c18a20',
+
                       borderRadius: '5px',
                       padding: '18px 20px',
                     }}
@@ -905,6 +1053,38 @@ function ReviewFindingsPage() {
                               PRIORITY
                             </span>
                           )}
+
+                          {decision && (
+                            <span
+                              style={{
+                                display:
+                                  'inline-block',
+                                padding:
+                                  '4px 9px',
+                                borderRadius:
+                                  '12px',
+                                fontSize:
+                                  '11px',
+                                fontWeight:
+                                  '700',
+                                background:
+                                  isAccepted
+                                    ? '#eaf5ec'
+                                    : '#eeeeee',
+                                color:
+                                  isAccepted
+                                    ? '#387644'
+                                    : '#555555',
+                              }}
+                            >
+                              {isAccepted
+                                ? '✓ '
+                                : isRejected
+                                ? '✕ '
+                                : ''}
+                              {decision.decision}
+                            </span>
+                          )}
                         </div>
 
                         {/* POLICY */}
@@ -980,7 +1160,7 @@ function ReviewFindingsPage() {
                       <div
                         style={{
                           minWidth:
-                            '180px',
+                            '190px',
                           textAlign:
                             'right',
                         }}
@@ -998,8 +1178,40 @@ function ReviewFindingsPage() {
                                 '8px',
                             }}
                           >
-                            ✓ No action
-                            required
+                            ✓ No action required
+                          </div>
+                        ) : decision ? (
+                          <div>
+                            <div
+                              style={{
+                                fontSize:
+                                  '13px',
+                                fontWeight:
+                                  '700',
+                                color:
+                                  isAccepted
+                                    ? '#387644'
+                                    : '#555555',
+                                marginBottom:
+                                  '9px',
+                              }}
+                            >
+                              {isAccepted
+                                ? '✓ Decision recorded'
+                                : '✕ Decision recorded'}
+                            </div>
+
+                            <button
+                              type="button"
+                              className="view-edit-report-button"
+                              onClick={() =>
+                                openRecommendation(
+                                  result
+                                )
+                              }
+                            >
+                              View Recommendation
+                            </button>
                           </div>
                         ) : (
                           <button
