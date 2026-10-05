@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 function PolicyReviewPage() {
+  const navigate = useNavigate()
+
   // ==========================================
   // SEARCH / FILTER / SORT
   // ==========================================
@@ -26,7 +28,30 @@ function PolicyReviewPage() {
       age: '2 days ago',
       status: 'In Review',
       findings: 14,
+
+      selectedPolicies: [
+        {
+          id: 'demo-cardiac-1',
+          name: 'Cardiac Coverage Policy',
+        },
+        {
+          id: 'demo-cardiac-2',
+          name: 'Coronary Intervention Policy',
+        },
+        {
+          id: 'demo-cardiac-3',
+          name: 'Cardiac Imaging Policy',
+        },
+      ],
+
+      selectedGuidelines: [
+        {
+          id: 'demo-cardiac-guideline',
+          name: '2026 Cardiac Coverage Guidelines',
+        },
+      ],
     },
+
     {
       id: 2,
       name: 'Diabetes Treatment Review',
@@ -38,7 +63,26 @@ function PolicyReviewPage() {
       age: '6 days ago',
       status: 'Completed',
       findings: 8,
+
+      selectedPolicies: [
+        {
+          id: 'demo-diabetes-1',
+          name: 'Diabetes Treatment Policy',
+        },
+        {
+          id: 'demo-diabetes-2',
+          name: 'Diabetes Medication Coverage Policy',
+        },
+      ],
+
+      selectedGuidelines: [
+        {
+          id: 'demo-diabetes-guideline',
+          name: '2026 Diabetes Treatment Guidelines',
+        },
+      ],
     },
+
     {
       id: 3,
       name: 'Oncology Coverage Review',
@@ -50,7 +94,34 @@ function PolicyReviewPage() {
       age: '14 days ago',
       status: 'Completed',
       findings: 21,
+
+      selectedPolicies: [
+        {
+          id: 'demo-oncology-1',
+          name: 'Oncology Coverage Policy',
+        },
+        {
+          id: 'demo-oncology-2',
+          name: 'Targeted Therapy Policy',
+        },
+        {
+          id: 'demo-oncology-3',
+          name: 'Cancer Treatment Policy',
+        },
+        {
+          id: 'demo-oncology-4',
+          name: 'Oncology Medication Policy',
+        },
+      ],
+
+      selectedGuidelines: [
+        {
+          id: 'demo-oncology-guideline',
+          name: 'Oncology Coverage Guidelines',
+        },
+      ],
     },
+
     {
       id: 4,
       name: 'Orthopedic Surgery Review',
@@ -62,7 +133,30 @@ function PolicyReviewPage() {
       age: '19 days ago',
       status: 'In Review',
       findings: 0,
+
+      selectedPolicies: [
+        {
+          id: 'demo-orthopedic-1',
+          name: 'Orthopedic Surgery Policy',
+        },
+        {
+          id: 'demo-orthopedic-2',
+          name: 'Joint Replacement Policy',
+        },
+        {
+          id: 'demo-orthopedic-3',
+          name: 'Rehabilitation Coverage Policy',
+        },
+      ],
+
+      selectedGuidelines: [
+        {
+          id: 'demo-orthopedic-guideline',
+          name: '2026 Orthopedic Guidelines',
+        },
+      ],
     },
+
     {
       id: 5,
       name: 'Mental Health Coverage Review',
@@ -74,6 +168,24 @@ function PolicyReviewPage() {
       age: '27 days ago',
       status: 'Completed',
       findings: 12,
+
+      selectedPolicies: [
+        {
+          id: 'demo-mental-health-1',
+          name: 'Mental Health Coverage Policy',
+        },
+        {
+          id: 'demo-mental-health-2',
+          name: 'Behavioral Health Treatment Policy',
+        },
+      ],
+
+      selectedGuidelines: [
+        {
+          id: 'demo-mental-health-guideline',
+          name: '2026 Mental Health Guidelines',
+        },
+      ],
     },
   ]
 
@@ -82,32 +194,36 @@ function PolicyReviewPage() {
   // ==========================================
 
   const savedReviews =
-    JSON.parse(localStorage.getItem('createdReviews')) || []
+    JSON.parse(
+      localStorage.getItem('createdReviews')
+    ) || []
 
-  const createdReviews = savedReviews.map((review) => ({
-    ...review,
+  const createdReviews = savedReviews.map(
+    (review) => ({
+      ...review,
 
-    policies:
-      review.policies ||
-      review.selectedPolicies?.length ||
-      1,
+      policies:
+        typeof review.policies === 'number'
+          ? review.policies
+          : review.selectedPolicies?.length || 1,
 
-    guideline:
-      review.guideline ||
-      review.selectedGuidelines?.[0]?.name ||
-      'Reference guidelines selected',
+      guideline:
+        review.guideline ||
+        review.selectedGuidelines?.[0]?.name ||
+        'Reference guidelines selected',
 
-    status:
-      review.status ||
-      'In Review',
+      status:
+        review.status ||
+        'In Review',
 
-    findings:
-      review.findings ?? 0,
+      findings:
+        review.findings ?? 0,
 
-    age:
-      review.age ||
-      'Recently',
-  }))
+      age:
+        review.age ||
+        'Recently',
+    })
+  )
 
   // ==========================================
   // COMBINE REVIEW SESSIONS
@@ -122,19 +238,25 @@ function PolicyReviewPage() {
   // COUNTS
   // ==========================================
 
-  const activeCount = allReviews.filter(
-    (review) => review.status === 'In Review'
-  ).length
+  const activeCount =
+    allReviews.filter(
+      (review) =>
+        review.status === 'In Review'
+    ).length
 
-  const completedCount = allReviews.filter(
-    (review) => review.status === 'Completed'
-  ).length
+  const completedCount =
+    allReviews.filter(
+      (review) =>
+        review.status === 'Completed'
+    ).length
 
-  const totalFindings = allReviews.reduce(
-    (total, review) =>
-      total + Number(review.findings || 0),
-    0
-  )
+  const totalFindings =
+    allReviews.reduce(
+      (total, review) =>
+        total +
+        Number(review.findings || 0),
+      0
+    )
 
   // ==========================================
   // SEARCH + FILTER + SORT
@@ -143,12 +265,15 @@ function PolicyReviewPage() {
   const visibleReviews = [...allReviews]
     .filter((review) => {
       const reviewName =
-        review.name || 'Untitled Review Session'
+        review.name ||
+        'Untitled Review Session'
 
       const matchesSearch =
         reviewName
           .toLowerCase()
-          .includes(search.toLowerCase())
+          .includes(
+            search.toLowerCase()
+          )
 
       const matchesFilter =
         filter === 'All' ||
@@ -160,16 +285,25 @@ function PolicyReviewPage() {
       )
     })
     .sort((a, b) => {
-      const aDate = new Date(a.date)
-      const bDate = new Date(b.date)
+      const aDate =
+        new Date(a.date)
 
-      const aTime = Number.isNaN(aDate.getTime())
-        ? 0
-        : aDate.getTime()
+      const bDate =
+        new Date(b.date)
 
-      const bTime = Number.isNaN(bDate.getTime())
-        ? 0
-        : bDate.getTime()
+      const aTime =
+        Number.isNaN(
+          aDate.getTime()
+        )
+          ? 0
+          : aDate.getTime()
+
+      const bTime =
+        Number.isNaN(
+          bDate.getTime()
+        )
+          ? 0
+          : bDate.getTime()
 
       if (sort === 'Oldest') {
         return aTime - bTime
@@ -177,6 +311,57 @@ function PolicyReviewPage() {
 
       return bTime - aTime
     })
+
+  // ==========================================
+  // OPEN EXISTING REVIEW SESSION
+  // ==========================================
+
+  function openReviewSession(review) {
+    const sessionToOpen = {
+      ...review,
+
+      selectedPolicies:
+        review.selectedPolicies || [],
+
+      selectedGuidelines:
+        review.selectedGuidelines || [],
+    }
+
+    localStorage.setItem(
+      'currentReview',
+      JSON.stringify(sessionToOpen)
+    )
+
+    localStorage.setItem(
+      'selectedPolicies',
+      JSON.stringify(
+        sessionToOpen.selectedPolicies
+      )
+    )
+
+    localStorage.setItem(
+      'selectedGuidelines',
+      JSON.stringify(
+        sessionToOpen.selectedGuidelines
+      )
+    )
+
+    localStorage.setItem(
+      'newReviewName',
+      sessionToOpen.name || ''
+    )
+
+    localStorage.setItem(
+      'newReviewDescription',
+      sessionToOpen.description || ''
+    )
+
+    navigate('/reviews/findings')
+  }
+
+  // ==========================================
+  // PAGE
+  // ==========================================
 
   return (
     <div className="app-page">
@@ -199,9 +384,7 @@ function PolicyReviewPage() {
 
         <div className="top-right">
           <div className="search-box">
-            <span>
-              ⌕
-            </span>
+            <span>⌕</span>
 
             <input
               type="text"
@@ -292,8 +475,10 @@ function PolicyReviewPage() {
           <div
             style={{
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
+              justifyContent:
+                'space-between',
+              alignItems:
+                'flex-start',
               gap: '24px',
               marginBottom: '28px',
             }}
@@ -313,7 +498,9 @@ function PolicyReviewPage() {
                   marginBottom: 0,
                 }}
               >
-                Create, continue, and monitor policy review sessions.
+                Create, continue, and
+                monitor policy review
+                sessions.
               </p>
             </div>
 
@@ -328,9 +515,7 @@ function PolicyReviewPage() {
             >
               Start a Review Session
 
-              <span>
-                +
-              </span>
+              <span>+</span>
             </Link>
           </div>
 
@@ -413,12 +598,15 @@ function PolicyReviewPage() {
               <button
                 type="button"
                 className={
-                  filter === 'In Review'
+                  filter ===
+                  'In Review'
                     ? 'selected'
                     : ''
                 }
                 onClick={() =>
-                  setFilter('In Review')
+                  setFilter(
+                    'In Review'
+                  )
                 }
               >
                 In Review
@@ -427,12 +615,15 @@ function PolicyReviewPage() {
               <button
                 type="button"
                 className={
-                  filter === 'Completed'
+                  filter ===
+                  'Completed'
                     ? 'selected'
                     : ''
                 }
                 onClick={() =>
-                  setFilter('Completed')
+                  setFilter(
+                    'Completed'
+                  )
                 }
               >
                 Completed
@@ -494,110 +685,131 @@ function PolicyReviewPage() {
               </span>
             </div>
 
-            {visibleReviews.map((review) => (
-              <div
-                className="policy-review-row"
-                key={review.id}
-              >
-                {/* SESSION NAME */}
-
-                <div>
-                  <strong className="review-name">
-                    {review.name ||
-                      'Untitled Review Session'}
-                  </strong>
-
-                  <p>
-                    {review.description ||
-                      'Policy review session.'}
-                  </p>
-                </div>
-
-                {/* POLICIES */}
-
-                <div className="document-cell">
-                  <span className="pdf-icon">
-                    {review.policies || 1}
-                  </span>
+            {visibleReviews.map(
+              (review) => (
+                <div
+                  className="policy-review-row"
+                  key={review.id}
+                  onClick={() =>
+                    openReviewSession(
+                      review
+                    )
+                  }
+                  style={{
+                    cursor: 'pointer',
+                  }}
+                  title="Open review session"
+                >
+                  {/* SESSION NAME */}
 
                   <div>
-                    <strong>
+                    <strong
+                      className="review-name"
+                      style={{
+                        textDecoration:
+                          'underline',
+                        textUnderlineOffset:
+                          '2px',
+                      }}
+                    >
+                      {review.name ||
+                        'Untitled Review Session'}
+                    </strong>
+
+                    <p>
+                      {review.description ||
+                        'Policy review session.'}
+                    </p>
+                  </div>
+
+                  {/* POLICIES */}
+
+                  <div className="document-cell">
+                    <span className="pdf-icon">
                       {review.policies || 1}
-                      {' '}
-                      {(review.policies || 1) === 1
-                        ? 'Policy'
-                        : 'Policies'}
-                    </strong>
+                    </span>
+
+                    <div>
+                      <strong>
+                        {review.policies || 1}{' '}
+                        {(review.policies ||
+                          1) === 1
+                          ? 'Policy'
+                          : 'Policies'}
+                      </strong>
+
+                      <small>
+                        included in session
+                      </small>
+                    </div>
+                  </div>
+
+                  {/* GUIDELINES */}
+
+                  <div className="guideline-cell">
+                    <span className="guideline-icon">
+                      ⌜
+                    </span>
+
+                    <div>
+                      <strong>
+                        {review.guideline ||
+                          'Not selected'}
+                      </strong>
+
+                      <small>
+                        Reference guideline
+                      </small>
+                    </div>
+                  </div>
+
+                  {/* DATE */}
+
+                  <div className="date-cell">
+                    <span>
+                      {review.date ||
+                        'Recently'}
+                    </span>
 
                     <small>
-                      included in session
+                      {review.age ||
+                        'Recently'}
                     </small>
                   </div>
-                </div>
 
-                {/* GUIDELINES */}
-
-                <div className="guideline-cell">
-                  <span className="guideline-icon">
-                    ⌜
-                  </span>
+                  {/* STATUS */}
 
                   <div>
+                    <span
+                      className={
+                        review.status ===
+                        'Completed'
+                          ? 'status completed'
+                          : 'status in-review'
+                      }
+                    >
+                      {review.status ||
+                        'In Review'}
+                    </span>
+                  </div>
+
+                  {/* FINDINGS */}
+
+                  <div className="findings-cell">
                     <strong>
-                      {review.guideline ||
-                        'Not selected'}
+                      {review.findings || 0}
                     </strong>
 
                     <small>
-                      Reference guideline
+                      identified
                     </small>
                   </div>
                 </div>
+              )
+            )}
 
-                {/* DATE */}
-
-                <div className="date-cell">
-                  <span>
-                    {review.date ||
-                      'Recently'}
-                  </span>
-
-                  <small>
-                    {review.age ||
-                      'Recently'}
-                  </small>
-                </div>
-
-                {/* STATUS */}
-
-                <div>
-                  <span
-                    className={
-                      review.status === 'Completed'
-                        ? 'status completed'
-                        : 'status in-review'
-                    }
-                  >
-                    {review.status ||
-                      'In Review'}
-                  </span>
-                </div>
-
-                {/* FINDINGS */}
-
-                <div className="findings-cell">
-                  <strong>
-                    {review.findings || 0}
-                  </strong>
-
-                  <small>
-                    identified
-                  </small>
-                </div>
-              </div>
-            ))}
-
-            {visibleReviews.length === 0 && (
+            {visibleReviews.length ===
+              0 && (
               <div
                 style={{
                   padding: '35px',
@@ -605,7 +817,8 @@ function PolicyReviewPage() {
                   color: '#777',
                 }}
               >
-                No review sessions match your search.
+                No review sessions match
+                your search.
               </div>
             )}
           </div>
