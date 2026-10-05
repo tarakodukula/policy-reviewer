@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 function PolicySelectionPage() {
   const navigate = useNavigate()
 
-
   // ==========================================
   // ORIGINAL POLICIES
   // ==========================================
@@ -14,63 +13,63 @@ function PolicySelectionPage() {
       id: 1,
       name: 'Cardiac Coverage Policy',
       description:
-        'Policy review for cardiac procedures and treatments.',
+        'Coverage criteria for cardiac procedures, diagnostic testing, and treatment.',
       date: 'Sep 23, 2026',
       age: '2 days ago',
       updated: 'Sep 23, 2026',
       updatedAge: '2 days ago',
-      status: 'In Review',
+      status: 'Active',
+      version: 'v4.0',
     },
-
     {
       id: 2,
       name: 'Diabetes Treatment Policy',
       description:
-        'Policy review for diabetes management and treatment.',
+        'Coverage criteria for diabetes management, medications, and treatment.',
       date: 'Sep 18, 2026',
       age: '6 days ago',
       updated: 'Sep 18, 2026',
       updatedAge: '6 days ago',
-      status: 'Completed',
+      status: 'Active',
+      version: 'v3.0',
     },
-
     {
       id: 3,
       name: 'Oncology Coverage Policy',
       description:
-        'Policy review for oncology services and treatments.',
+        'Coverage criteria for oncology services, testing, and treatments.',
       date: 'Sep 10, 2026',
       age: '14 days ago',
       updated: 'Sep 10, 2026',
       updatedAge: '14 days ago',
-      status: 'Completed',
+      status: 'Active',
+      version: 'v2.0',
     },
-
     {
       id: 4,
       name: 'Orthopedic Surgery Policy',
       description:
-        'Policy review for orthopedic procedures and rehab.',
+        'Coverage criteria for orthopedic procedures and rehabilitation.',
       date: 'Sep 5, 2026',
       age: '19 days ago',
       updated: 'Sep 5, 2026',
       updatedAge: '19 days ago',
-      status: 'In Review',
+      status: 'Active',
+      version: 'v5.0',
     },
-
     {
       id: 5,
       name: 'Mental Health Coverage Policy',
       description:
-        'Policy review for mental health services and treatments.',
+        'Coverage criteria for mental health services and treatment.',
       date: 'Aug 28, 2026',
       age: '27 days ago',
       updated: 'Aug 28, 2026',
       updatedAge: '27 days ago',
-      status: 'Completed',
+      status: 'Active',
+      version: 'v3.0',
     },
   ]
-
 
   // ==========================================
   // GET NEWLY UPLOADED POLICIES
@@ -81,15 +80,13 @@ function PolicySelectionPage() {
       localStorage.getItem('addedPolicies')
     ) || []
 
-
-  // Convert uploaded policy properties so they
-  // match the properties used by this page
   const addedPolicies = savedPolicies.map((policy) => ({
     ...policy,
 
     date:
       policy.date ||
-      policy.created,
+      policy.created ||
+      'Recently',
 
     age:
       policy.age ||
@@ -99,13 +96,21 @@ function PolicySelectionPage() {
     updated:
       policy.updated ||
       policy.date ||
-      policy.created,
+      policy.created ||
+      'Recently',
 
     updatedAge:
       policy.updatedAge ||
       'Just now',
-  }))
 
+    status:
+      policy.status ||
+      'Active',
+
+    version:
+      policy.version ||
+      'v1.0',
+  }))
 
   // ==========================================
   // GET DELETED POLICY IDS
@@ -115,7 +120,6 @@ function PolicySelectionPage() {
     JSON.parse(
       localStorage.getItem('deletedPolicyIds')
     ) || []
-
 
   // ==========================================
   // COMBINE ALL POLICIES
@@ -129,20 +133,41 @@ function PolicySelectionPage() {
       !deletedPolicyIds.includes(policy.id)
   )
 
-
   // ==========================================
-  // SELECTED POLICIES
+  // PREVIOUSLY SELECTED POLICIES
   // ==========================================
 
-  // Start with policies 1 and 2 checked,
-  // as long as they have not been deleted.
-  const startingSelections = [1, 2].filter((id) =>
-    policies.some((policy) => policy.id === id)
-  )
+  const previouslySelected =
+    JSON.parse(
+      localStorage.getItem('selectedPolicies')
+    ) || []
+
+  const startingSelections =
+    previouslySelected.map(
+      (policy) => policy.id
+    )
 
   const [selectedPolicies, setSelectedPolicies] =
     useState(startingSelections)
 
+  // ==========================================
+  // SEARCH
+  // ==========================================
+
+  const [search, setSearch] = useState('')
+
+  const visiblePolicies = policies.filter((policy) => {
+    const searchText = search.toLowerCase()
+
+    return (
+      policy.name
+        .toLowerCase()
+        .includes(searchText) ||
+      (policy.description || '')
+        .toLowerCase()
+        .includes(searchText)
+    )
+  })
 
   // ==========================================
   // CHECK / UNCHECK POLICY
@@ -150,65 +175,61 @@ function PolicySelectionPage() {
 
   function togglePolicy(id) {
     if (selectedPolicies.includes(id)) {
-
       setSelectedPolicies(
         selectedPolicies.filter(
           (policyId) => policyId !== id
         )
       )
-
     } else {
-
       setSelectedPolicies([
         ...selectedPolicies,
         id,
       ])
-
     }
   }
-
 
   // ==========================================
   // CONFIRM SELECTIONS
   // ==========================================
 
   function confirmSelections() {
+    if (selectedPolicies.length === 0) {
+      alert(
+        'Please select at least one policy for this review session.'
+      )
+      return
+    }
 
     const selected = policies.filter(
       (policy) =>
         selectedPolicies.includes(policy.id)
     )
 
-
-    // Save selected policies in the browser
     localStorage.setItem(
       'selectedPolicies',
       JSON.stringify(selected)
     )
 
-
-    // Return to New Policy Review
     navigate('/reviews/new')
   }
 
+  // ==========================================
+  // CANCEL
+  // ==========================================
+
+  function cancelSelection() {
+    navigate('/reviews/new')
+  }
 
   return (
     <div className="policy-selection-page">
-
-
       {/* ======================================
-          FAKE BLURRED PAGE UNDERNEATH
+          BACKGROUND PAGE
       ====================================== */}
 
       <div className="selection-background">
-
-
-        {/* TOP BAR */}
-
         <header className="top-bar">
-
           <div className="brand-area">
-
             <span className="brand-name">
               Policy Review
             </span>
@@ -218,38 +239,29 @@ function PolicySelectionPage() {
             <span className="workspace-name">
               Policy Review Workspace
             </span>
-
           </div>
 
-
           <div className="top-right">
-
             <div className="search-box">
-
               <span>
                 ⌕
               </span>
 
               <input
                 type="text"
-                placeholder="Search policies, codes..."
+                placeholder="Search policies, guidelines..."
               />
-
             </div>
-
 
             <span className="top-icon">
               ?
             </span>
 
-
             <span className="top-icon">
               ⚙
             </span>
 
-
             <div className="user-area">
-
               <div className="user-avatar">
                 SC
               </div>
@@ -257,125 +269,73 @@ function PolicySelectionPage() {
               <span>
                 Sarah Chen
               </span>
-
             </div>
-
           </div>
-
         </header>
 
-
-
         <div className="app-body">
-
-
-          {/* SIDEBAR */}
-
           <aside className="sidebar">
-
-
             <div className="nav-item">
-
               <span className="nav-icon">
                 ▦
               </span>
 
               Dashboard
-
             </div>
 
-
             <div className="nav-item active">
-
               <span className="nav-icon">
                 ▣
               </span>
 
-              Policy Reviews
-
+              Review Sessions
             </div>
 
-
             <div className="nav-item">
-
               <span className="nav-icon">
                 ⊗
               </span>
 
-              Guidelines
-
+              Policy Database
             </div>
 
-
             <div className="nav-item">
-
               <span className="nav-icon">
                 ⊗
               </span>
 
-              Policies
-
+              Guideline Database
             </div>
-
-
           </aside>
 
-
-
-          {/* BACKGROUND CONTENT */}
-
           <main className="selection-background-content">
-
             <span>
-              ← Back to Policy Reviews
+              ← Back to Review Sessions
             </span>
 
-
             <h1>
-              New Policy Review
+              Start a Review Session
             </h1>
 
-
             <p>
-              Upload a policy document and select the
-              guidelines to use for this review.
+              Create a review session and choose the policies
+              that should be evaluated.
             </p>
 
-
             <div className="background-card">
-
               <h2>
-                Review Information
+                Review Session Details
               </h2>
-
             </div>
 
-
             <div className="background-card">
-
               <h2>
-                Policy Document(s)
+                Policies in this Review Session
               </h2>
-
             </div>
-
-
-            <div className="background-card">
-
-              <h2>
-                External Guidelines Settings
-              </h2>
-
-            </div>
-
           </main>
-
-
         </div>
-
       </div>
-
-
 
       {/* ======================================
           DARK / BLUR OVERLAY
@@ -383,40 +343,116 @@ function PolicySelectionPage() {
 
       <div
         className="selection-overlay"
-        onClick={() =>
-          navigate('/reviews/new')
-        }
+        onClick={cancelSelection}
       ></div>
-
-
 
       {/* ======================================
           POLICY SELECTION MODAL
       ====================================== */}
 
       <div className="policy-selection-modal">
+        {/* ==================================
+            MODAL HEADER
+        ================================== */}
 
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: '20px',
+            marginBottom: '8px',
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                marginBottom: '7px',
+              }}
+            >
+              Select Policies
+            </h1>
 
-        <h1>
-          Policy Selection
-        </h1>
+            <p
+              className="selection-subtitle"
+              style={{
+                margin: 0,
+              }}
+            >
+              Choose the policies to include in this review session.
+            </p>
+          </div>
 
+          <button
+            type="button"
+            onClick={cancelSelection}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              fontSize: '22px',
+              cursor: 'pointer',
+              color: '#666',
+            }}
+            aria-label="Close policy selection"
+          >
+            ×
+          </button>
+        </div>
 
-        <p className="selection-subtitle">
-          Select all policies to be used in your review
-        </p>
+        {/* ==================================
+            SEARCH + SELECTION COUNT
+        ================================== */}
 
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '20px',
+            margin: '22px 0 18px',
+          }}
+        >
+          <input
+            type="text"
+            placeholder="⌕   Search Policy Database..."
+            value={search}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
+            style={{
+              flex: 1,
+              minWidth: 0,
+              padding: '10px 12px',
+              border: '1px solid #cfcfcf',
+              borderRadius: '4px',
+              fontFamily: 'inherit',
+            }}
+          />
 
+          <span
+            style={{
+              fontSize: '13px',
+              fontWeight: '700',
+              color:
+                selectedPolicies.length > 0
+                  ? '#0078bf'
+                  : '#777',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {selectedPolicies.length}{' '}
+            {selectedPolicies.length === 1
+              ? 'policy selected'
+              : 'policies selected'}
+          </span>
+        </div>
 
-        {/* TABLE */}
+        {/* ==================================
+            POLICY TABLE
+        ================================== */}
 
         <div className="selection-table">
-
-
-          {/* TABLE HEADER */}
-
           <div className="selection-table-header">
-
             <div></div>
 
             <div>
@@ -424,7 +460,7 @@ function PolicySelectionPage() {
             </div>
 
             <div>
-              DATE CREATED
+              VERSION
             </div>
 
             <div>
@@ -434,25 +470,22 @@ function PolicySelectionPage() {
             <div>
               STATUS
             </div>
-
           </div>
 
-
-
-          {/* POLICY ROWS */}
-
-          {policies.map((policy) => (
-
+          {visiblePolicies.map((policy) => (
             <div
               className="selection-table-row"
               key={policy.id}
+              style={{
+                cursor: 'pointer',
+              }}
+              onClick={() =>
+                togglePolicy(policy.id)
+              }
             >
-
-
               {/* CHECKBOX */}
 
               <div className="selection-checkbox-cell">
-
                 <input
                   type="checkbox"
                   checked={
@@ -463,16 +496,15 @@ function PolicySelectionPage() {
                   onChange={() =>
                     togglePolicy(policy.id)
                   }
+                  onClick={(event) =>
+                    event.stopPropagation()
+                  }
                 />
-
               </div>
 
-
-
-              {/* POLICY NAME */}
+              {/* POLICY */}
 
               <div className="selection-policy-name">
-
                 <strong>
                   {policy.name}
                 </strong>
@@ -480,31 +512,23 @@ function PolicySelectionPage() {
                 <p>
                   {policy.description}
                 </p>
-
               </div>
 
-
-
-              {/* DATE CREATED */}
+              {/* VERSION */}
 
               <div className="selection-date">
-
                 <span>
-                  {policy.date}
+                  {policy.version || 'v1.0'}
                 </span>
 
                 <small>
-                  {policy.age}
+                  Current version
                 </small>
-
               </div>
-
-
 
               {/* LAST UPDATED */}
 
               <div className="selection-date">
-
                 <span>
                   {policy.updated}
                 </span>
@@ -512,57 +536,65 @@ function PolicySelectionPage() {
                 <small>
                   {policy.updatedAge}
                 </small>
-
               </div>
-
-
 
               {/* STATUS */}
 
               <div>
-
                 <span
-                  className={
-                    policy.status === 'Completed'
-                      ? 'status completed'
-                      : 'status in-review'
-                  }
+                  className="status completed"
                 >
-                  {policy.status}
+                  {policy.status || 'Active'}
                 </span>
-
               </div>
-
-
             </div>
-
           ))}
 
-
+          {visiblePolicies.length === 0 && (
+            <div
+              style={{
+                padding: '30px',
+                textAlign: 'center',
+                color: '#777',
+              }}
+            >
+              No policies match your search.
+            </div>
+          )}
         </div>
 
-
-
         {/* ==================================
-            CONFIRM BUTTON
+            BOTTOM ACTIONS
         ================================== */}
 
-        <div className="selection-confirm-row">
+        <div
+          className="selection-confirm-row"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <button
+            type="button"
+            className="cancel-review-button"
+            onClick={cancelSelection}
+          >
+            Cancel
+          </button>
 
           <button
             type="button"
             className="confirm-selection-button"
             onClick={confirmSelections}
           >
-            Confirm Selections
+            Add {selectedPolicies.length}{' '}
+            {selectedPolicies.length === 1
+              ? 'Policy'
+              : 'Policies'} to Session
           </button>
-
         </div>
-
-
       </div>
-
-
     </div>
   )
 }
