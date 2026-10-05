@@ -4306,3 +4306,149 @@ input[type="radio"],
 .new-policy-content * {
   font-family: Roboto, Arial, Helvetica, sans-serif;
 }
+
+/* =========================================================
+   FINAL COLOR PALETTE OVERRIDES
+   Blue:      #0078BF
+   Green:     #00843D
+   Dark Gray: #4B4B45
+   ========================================================= */
+
+:root {
+  --brand-blue: #0078BF;
+  --brand-green: #00843D;
+  --brand-gray: #4B4B45;
+}
+
+/* Main top navigation */
+.top-bar {
+  background: var(--brand-blue);
+}
+
+/* Main text */
+.app-page,
+.policy-selection-page,
+.policy-editor-content,
+.guidelines-content {
+  color: var(--brand-gray);
+}
+
+/* Active sidebar */
+.nav-item.active {
+  background: #e8f4fa;
+  color: var(--brand-blue);
+  border-left-color: var(--brand-blue);
+}
+
+.nav-item:hover {
+  background: #f0f7fa;
+}
+
+/* Main links */
+.back-link,
+.review-name,
+.upload-area strong,
+.selection-policy-name strong,
+.guideline-name-cell strong,
+.reviews-card a,
+.dashboard-content a {
+  color: var(--brand-blue);
+}
+
+/* Review session filter */
+.filter-buttons button.selected {
+  background: #e8f4fa;
+  color: var(--brand-blue);
+}
+
+/* Guideline filters */
+.guidelines-filter-buttons button.active {
+  background: #e8f4fa;
+  color: var(--brand-blue);
+  border-color: var(--brand-blue);
+}
+
+/* Findings filters */
+.finding-filter-button.active {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+  color: white;
+}
+
+/* Recommendation / report buttons */
+.view-edit-report-button {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+
+.view-edit-report-button:hover {
+  background: #e8f4fa;
+}
+
+/* Selection checkboxes */
+.selection-checkbox-cell input[type="checkbox"],
+.guideline-option input {
+  accent-color: var(--brand-blue);
+}
+
+/* Primary selection buttons */
+.confirm-selection-button,
+.start-review-button,
+.new-review-button {
+  border-color: var(--brand-green);
+}
+
+/* Completed / success states */
+.status.completed {
+  background: #e5f4ec;
+  color: var(--brand-green);
+}
+
+/* Dashboard progress bars */
+.progress.criteria {
+  background: var(--brand-green);
+}
+
+.progress.mismatch {
+  background: var(--brand-blue);
+}
+
+.progress.evidence {
+  background: var(--brand-gray);
+}
+
+/* Guideline icon */
+.guideline-icon {
+  color: var(--brand-blue);
+}
+
+/* Unread / positive indicators */
+.finding-unread {
+  color: var(--brand-green);
+}
+
+/* Recommendation type colors */
+.recommendation-type.change {
+  background: #e8f4fa;
+  color: var(--brand-blue);
+}
+
+.recommendation-type.add {
+  background: #e5f4ec;
+  color: var(--brand-green);
+}
+
+/* Editor links / accents */
+.policy-editor-content .back-link,
+.editor-policy-column strong,
+.editor-guideline-column strong,
+.recommendation-text {
+  color: var(--brand-blue);
+}
+
+/* Input focus */
+.policy-editor-textarea:focus,
+.review-search:focus,
+.review-name-input:focus {
+  border-color: var(--brand-blue);
+}

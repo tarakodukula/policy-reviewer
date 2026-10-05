@@ -422,10 +422,6 @@ function PolicyReviewPage() {
             to="/dashboard"
             className="nav-item"
           >
-            <span className="nav-icon">
-              ▦
-            </span>
-
             Dashboard
           </Link>
 
@@ -433,10 +429,6 @@ function PolicyReviewPage() {
             to="/reviews"
             className="nav-item active"
           >
-            <span className="nav-icon">
-              ▣
-            </span>
-
             Review Sessions
           </Link>
 
@@ -444,10 +436,6 @@ function PolicyReviewPage() {
             to="/policies"
             className="nav-item"
           >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
             Policy Database
           </Link>
 
@@ -455,10 +443,6 @@ function PolicyReviewPage() {
             to="/guidelines"
             className="nav-item"
           >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
             Guideline Database
           </Link>
         </aside>

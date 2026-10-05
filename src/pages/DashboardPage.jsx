@@ -163,10 +163,6 @@ function DashboardPage() {
             to="/dashboard"
             className="nav-item active"
           >
-            <span className="nav-icon">
-              ▦
-            </span>
-
             Dashboard
           </Link>
 
@@ -174,10 +170,6 @@ function DashboardPage() {
             to="/reviews"
             className="nav-item"
           >
-            <span className="nav-icon">
-              ▣
-            </span>
-
             Review Sessions
           </Link>
 
@@ -185,10 +177,6 @@ function DashboardPage() {
             to="/policies"
             className="nav-item"
           >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
             Policy Database
           </Link>
 
@@ -196,10 +184,6 @@ function DashboardPage() {
             to="/guidelines"
             className="nav-item"
           >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
             Guideline Database
           </Link>
         </aside>

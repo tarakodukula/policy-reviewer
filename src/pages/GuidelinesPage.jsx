@@ -9,10 +9,12 @@ function GuidelinesPage() {
   const [sort, setSort] = useState('Most recent')
 
   // Remember guidelines that have been deleted
-  const [deletedGuidelineIds, setDeletedGuidelineIds] = useState(
-    JSON.parse(localStorage.getItem('deletedGuidelineIds')) || []
-  )
 
+  const [deletedGuidelineIds, setDeletedGuidelineIds] = useState(
+    JSON.parse(
+      localStorage.getItem('deletedGuidelineIds')
+    ) || []
+  )
 
   // ==========================================
   // ORIGINAL GUIDELINES
@@ -80,7 +82,6 @@ function GuidelinesPage() {
     },
   ]
 
-
   // ==========================================
   // GET UPLOADED GUIDELINES
   // ==========================================
@@ -89,7 +90,6 @@ function GuidelinesPage() {
     JSON.parse(
       localStorage.getItem('addedGuidelines')
     ) || []
-
 
   // ==========================================
   // COMBINE ALL GUIDELINES
@@ -100,120 +100,108 @@ function GuidelinesPage() {
     ...guidelines,
   ].filter(
     (guideline) =>
-      !deletedGuidelineIds.includes(guideline.id)
+      !deletedGuidelineIds.includes(
+        guideline.id
+      )
   )
-
 
   // ==========================================
   // DELETE GUIDELINE
   // ==========================================
 
   function deleteGuideline(id, name) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${name}"?`
-    )
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to delete "${name}"?`
+      )
 
-    // Stop if Cancel was clicked
     if (!confirmed) {
       return
     }
 
-
-    // Get uploaded guidelines
     const savedGuidelines =
       JSON.parse(
-        localStorage.getItem('addedGuidelines')
+        localStorage.getItem(
+          'addedGuidelines'
+        )
       ) || []
 
-
-    // Remove guideline if it was uploaded
     const updatedSavedGuidelines =
       savedGuidelines.filter(
-        (guideline) => guideline.id !== id
+        (guideline) =>
+          guideline.id !== id
       )
 
-
-    // Save uploaded guidelines again
     localStorage.setItem(
       'addedGuidelines',
-      JSON.stringify(updatedSavedGuidelines)
+      JSON.stringify(
+        updatedSavedGuidelines
+      )
     )
 
-
-    // Remember this guideline was deleted
     const updatedDeletedIds = [
       ...deletedGuidelineIds,
       id,
     ]
 
+    setDeletedGuidelineIds(
+      updatedDeletedIds
+    )
 
-    // Update React
-    setDeletedGuidelineIds(updatedDeletedIds)
-
-
-    // Save deleted IDs
     localStorage.setItem(
       'deletedGuidelineIds',
-      JSON.stringify(updatedDeletedIds)
+      JSON.stringify(
+        updatedDeletedIds
+      )
     )
   }
-
 
   // ==========================================
   // SEARCH + FILTER + SORT
   // ==========================================
 
-  const visibleGuidelines = allGuidelines
-    .filter((guideline) => {
+  const visibleGuidelines =
+    allGuidelines
+      .filter((guideline) => {
+        const matchesSearch =
+          guideline.name
+            .toLowerCase()
+            .includes(
+              search.toLowerCase()
+            )
 
-      const matchesSearch =
-        guideline.name
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          )
+        const matchesFilter =
+          filter === 'All' ||
+          guideline.status === filter
 
-
-      const matchesFilter =
-        filter === 'All' ||
-        guideline.status === filter
-
-
-      return (
-        matchesSearch &&
-        matchesFilter
-      )
-    })
-
-    .sort((a, b) => {
-
-      if (sort === 'Oldest') {
         return (
-          new Date(a.created) -
-          new Date(b.created)
+          matchesSearch &&
+          matchesFilter
         )
-      }
+      })
 
+      .sort((a, b) => {
+        if (sort === 'Oldest') {
+          return (
+            new Date(a.created) -
+            new Date(b.created)
+          )
+        }
 
-      return (
-        new Date(b.created) -
-        new Date(a.created)
-      )
-    })
-
+        return (
+          new Date(b.created) -
+          new Date(a.created)
+        )
+      })
 
   return (
     <div className="app-page">
-
-
       {/* ======================================
           TOP BAR
       ====================================== */}
 
       <header className="top-bar">
-
         <div className="brand-area">
-
           <span className="brand-name">
             Policy Review
           </span>
@@ -223,38 +211,29 @@ function GuidelinesPage() {
           <span className="workspace-name">
             Policy Review Workspace
           </span>
-
         </div>
 
-
         <div className="top-right">
-
           <div className="search-box">
-
             <span>
               ⌕
             </span>
 
             <input
               type="text"
-              placeholder="Search policies, codes..."
+              placeholder="Search policies, guidelines..."
             />
-
           </div>
-
 
           <span className="top-icon">
             ?
           </span>
 
-
           <span className="top-icon">
             ⚙
           </span>
 
-
           <div className="user-area">
-
             <div className="user-avatar">
               SC
             </div>
@@ -262,122 +241,70 @@ function GuidelinesPage() {
             <span>
               Sarah Chen
             </span>
-
           </div>
-
         </div>
-
       </header>
 
-
-
       <div className="app-body">
-
-
         {/* ======================================
             SIDEBAR
         ====================================== */}
 
         <aside className="sidebar">
-
-
           <Link
             to="/dashboard"
             className="nav-item"
           >
-
-            <span className="nav-icon">
-              ▦
-            </span>
-
             Dashboard
-
           </Link>
-
-
 
           <Link
             to="/reviews"
             className="nav-item"
           >
-
-            <span className="nav-icon">
-              ▣
-            </span>
-
-            Policy Reviews
-
+            Review Sessions
           </Link>
-
-
-
-          <Link
-            to="/guidelines"
-            className="nav-item active"
-          >
-
-            <span className="nav-icon">
-              ⊗
-            </span>
-
-            Guidelines
-
-          </Link>
-
-
 
           <Link
             to="/policies"
             className="nav-item"
           >
-
-            <span className="nav-icon">
-              ⊗
-            </span>
-
-            Policies
-
+            Policy Database
           </Link>
 
-
+          <Link
+            to="/guidelines"
+            className="nav-item active"
+          >
+            Guideline Database
+          </Link>
         </aside>
-
-
 
         {/* ======================================
             MAIN PAGE
         ====================================== */}
 
         <main className="guidelines-content">
-
-
           <h1>
             Guidelines
           </h1>
-
 
           <p className="guidelines-subtitle">
             View and manage your guidelines. Each entry contains a
             guideline with a log of all versions of that guideline over time.
           </p>
 
-
-
           {/* ==================================
               CONTROLS
           ================================== */}
 
           <div className="guidelines-controls">
-
-
             {/* SEARCH */}
 
             <div className="guidelines-search">
-
               <span>
                 ⌕
               </span>
-
 
               <input
                 type="text"
@@ -389,16 +316,11 @@ function GuidelinesPage() {
                   )
                 }
               />
-
             </div>
-
-
 
             {/* FILTER BUTTONS */}
 
             <div className="guidelines-filter-buttons">
-
-
               <button
                 type="button"
                 className={
@@ -413,8 +335,6 @@ function GuidelinesPage() {
                 All
               </button>
 
-
-
               <button
                 type="button"
                 className={
@@ -423,13 +343,13 @@ function GuidelinesPage() {
                     : ''
                 }
                 onClick={() =>
-                  setFilter('In Review')
+                  setFilter(
+                    'In Review'
+                  )
                 }
               >
                 In Review
               </button>
-
-
 
               <button
                 type="button"
@@ -439,26 +359,21 @@ function GuidelinesPage() {
                     : ''
                 }
                 onClick={() =>
-                  setFilter('Completed')
+                  setFilter(
+                    'Completed'
+                  )
                 }
               >
                 Completed
               </button>
-
-
             </div>
-
-
 
             {/* SORT */}
 
             <div className="guidelines-sort">
-
-
               <span>
                 Sort by
               </span>
-
 
               <select
                 value={sort}
@@ -468,37 +383,25 @@ function GuidelinesPage() {
                   )
                 }
               >
-
                 <option>
                   Most recent
                 </option>
 
-
                 <option>
                   Oldest
                 </option>
-
               </select>
-
-
             </div>
-
-
           </div>
-
-
 
           {/* ==================================
               GUIDELINES TABLE
           ================================== */}
 
           <div className="guidelines-table">
-
-
             {/* TABLE HEADER */}
 
             <div className="guidelines-table-header">
-
               <div>
                 GUIDELINE NAME
               </div>
@@ -514,113 +417,83 @@ function GuidelinesPage() {
               <div>
                 STATUS
               </div>
-
             </div>
-
-
 
             {/* TABLE ROWS */}
 
-            {visibleGuidelines.map((guideline) => (
+            {visibleGuidelines.map(
+              (guideline) => (
+                <div
+                  className="guidelines-table-row"
+                  key={guideline.id}
+                >
+                  {/* GUIDELINE NAME */}
 
-              <div
-                className="guidelines-table-row"
-                key={guideline.id}
-              >
+                  <div className="guideline-name-cell">
+                    <strong>
+                      {guideline.name}
+                    </strong>
 
+                    <p>
+                      {guideline.description}
+                    </p>
+                  </div>
 
-                {/* GUIDELINE NAME */}
+                  {/* DATE CREATED */}
 
-                <div className="guideline-name-cell">
+                  <div className="guideline-date-cell">
+                    <span>
+                      {guideline.created}
+                    </span>
 
-                  <strong>
-                    {guideline.name}
-                  </strong>
+                    <small>
+                      {guideline.createdAge}
+                    </small>
+                  </div>
 
+                  {/* LAST UPDATED */}
 
-                  <p>
-                    {guideline.description}
-                  </p>
+                  <div className="guideline-date-cell">
+                    <span>
+                      {guideline.updated}
+                    </span>
 
+                    <small>
+                      {guideline.updatedAge}
+                    </small>
+                  </div>
+
+                  {/* STATUS + DELETE */}
+
+                  <div className="guideline-status-actions">
+                    <span
+                      className={
+                        guideline.status ===
+                        'Completed'
+                          ? 'status completed'
+                          : 'status in-review'
+                      }
+                    >
+                      {guideline.status}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="delete-guideline-button"
+                      onClick={() =>
+                        deleteGuideline(
+                          guideline.id,
+                          guideline.name
+                        )
+                      }
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-
-
-
-                {/* DATE CREATED */}
-
-                <div className="guideline-date-cell">
-
-                  <span>
-                    {guideline.created}
-                  </span>
-
-
-                  <small>
-                    {guideline.createdAge}
-                  </small>
-
-                </div>
-
-
-
-                {/* LAST UPDATED */}
-
-                <div className="guideline-date-cell">
-
-                  <span>
-                    {guideline.updated}
-                  </span>
-
-
-                  <small>
-                    {guideline.updatedAge}
-                  </small>
-
-                </div>
-
-
-
-                {/* STATUS + DELETE */}
-
-                <div className="guideline-status-actions">
-
-
-                  <span
-                    className={
-                      guideline.status === 'Completed'
-                        ? 'status completed'
-                        : 'status in-review'
-                    }
-                  >
-                    {guideline.status}
-                  </span>
-
-
-                  <button
-                    type="button"
-                    className="delete-guideline-button"
-                    onClick={() =>
-                      deleteGuideline(
-                        guideline.id,
-                        guideline.name
-                      )
-                    }
-                  >
-                    Delete
-                  </button>
-
-
-                </div>
-
-
-              </div>
-
-            ))}
-
-
+              )
+            )}
           </div>
-
-
 
           {/* ==================================
               NEW GUIDELINE BUTTON
@@ -630,23 +503,19 @@ function GuidelinesPage() {
             type="button"
             className="new-guideline-button"
             onClick={() =>
-              navigate('/guidelines/new')
+              navigate(
+                '/guidelines/new'
+              )
             }
           >
-
             New Guideline
 
             <span>
               ＋
             </span>
-
           </button>
-
-
         </main>
-
       </div>
-
     </div>
   )
 }

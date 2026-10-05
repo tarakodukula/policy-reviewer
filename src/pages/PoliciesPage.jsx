@@ -8,7 +8,6 @@ function PoliciesPage() {
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
 
-
   // ==========================================
   // DELETED POLICIES
   // ==========================================
@@ -19,7 +18,6 @@ function PoliciesPage() {
     ) || []
   )
 
-
   // ==========================================
   // ORIGINAL POLICIES
   // ==========================================
@@ -28,25 +26,18 @@ function PoliciesPage() {
     {
       id: 1,
       name: 'Cardiac Coverage Policy',
-
       description:
         'Policy review for cardiac procedures and treatments.',
-
       fileName:
         'Cardiac_Coverage_Policy_v4.pdf',
-
       created:
         'Sep 23, 2026',
-
       createdAge:
         '2 days ago',
-
       updated:
         'Sep 23, 2026',
-
       updatedAge:
         '2 days ago',
-
       status:
         'In Review',
     },
@@ -54,25 +45,18 @@ function PoliciesPage() {
     {
       id: 2,
       name: 'Diabetes Treatment Policy',
-
       description:
         'Policy review for diabetes management and treatment.',
-
       fileName:
         'Diabetes_Treatment_Policy_v3.pdf',
-
       created:
         'Sep 18, 2026',
-
       createdAge:
         '6 days ago',
-
       updated:
         'Sep 18, 2026',
-
       updatedAge:
         '6 days ago',
-
       status:
         'Completed',
     },
@@ -80,25 +64,18 @@ function PoliciesPage() {
     {
       id: 3,
       name: 'Oncology Coverage Policy',
-
       description:
         'Policy review for oncology services and treatments.',
-
       fileName:
         'Oncology_Policy_v2.pdf',
-
       created:
         'Sep 10, 2026',
-
       createdAge:
         '14 days ago',
-
       updated:
         'Sep 10, 2026',
-
       updatedAge:
         '14 days ago',
-
       status:
         'Completed',
     },
@@ -106,25 +83,18 @@ function PoliciesPage() {
     {
       id: 4,
       name: 'Orthopedic Surgery Policy',
-
       description:
         'Policy review for orthopedic procedures and rehab.',
-
       fileName:
         'Ortho_Surgery_Policy_v5.pdf',
-
       created:
         'Sep 5, 2026',
-
       createdAge:
         '19 days ago',
-
       updated:
         'Sep 5, 2026',
-
       updatedAge:
         '19 days ago',
-
       status:
         'In Review',
     },
@@ -132,30 +102,22 @@ function PoliciesPage() {
     {
       id: 5,
       name: 'Mental Health Coverage Policy',
-
       description:
         'Policy review for mental health services and treatment.',
-
       fileName:
         'Mental_Health_Policy_v3.pdf',
-
       created:
         'Aug 28, 2026',
-
       createdAge:
         '27 days ago',
-
       updated:
         'Aug 28, 2026',
-
       updatedAge:
         '27 days ago',
-
       status:
         'Completed',
     },
   ]
-
 
   // ==========================================
   // GET NEW POLICIES
@@ -166,11 +128,8 @@ function PoliciesPage() {
       localStorage.getItem('addedPolicies')
     ) || []
 
-
-  // Make uploaded policy fields match this page
   const addedPolicies =
     savedPolicies.map((policy) => ({
-
       ...policy,
 
       created:
@@ -195,9 +154,7 @@ function PoliciesPage() {
       fileName:
         policy.fileName ||
         policy.name,
-
     }))
-
 
   // ==========================================
   // GET SAVED POLICY VERSIONS
@@ -207,7 +164,6 @@ function PoliciesPage() {
     JSON.parse(
       localStorage.getItem('policyVersions')
     ) || []
-
 
   // ==========================================
   // COMBINE POLICIES
@@ -221,18 +177,12 @@ function PoliciesPage() {
       !deletedPolicyIds.includes(policy.id)
   )
 
-
   // ==========================================
   // APPLY EDITED VERSION INFORMATION
   // ==========================================
 
   const allPolicies =
     basePolicies.map((policy) => {
-
-      // Find versions that belong to this policy.
-      //
-      // PolicyReviewEditingPage saves the
-      // filename in originalPolicy.
       const matchingVersions =
         policyVersions.filter(
           (version) =>
@@ -242,8 +192,6 @@ function PoliciesPage() {
               policy.name
         )
 
-
-      // No edited version exists
       if (matchingVersions.length === 0) {
         return {
           ...policy,
@@ -251,15 +199,12 @@ function PoliciesPage() {
         }
       }
 
-
-      // Find newest edited version
       const newestVersion =
         [...matchingVersions].sort(
           (a, b) =>
             new Date(b.createdAt) -
             new Date(a.createdAt)
         )[0]
-
 
       const updatedDate =
         new Date(
@@ -272,7 +217,6 @@ function PoliciesPage() {
             year: 'numeric',
           }
         )
-
 
       return {
         ...policy,
@@ -291,25 +235,20 @@ function PoliciesPage() {
       }
     })
 
-
   // ==========================================
   // DELETE POLICY
   // ==========================================
 
   function deletePolicy(id, name) {
-
     const confirmed =
       window.confirm(
         `Are you sure you want to delete "${name}"?`
       )
 
-
     if (!confirmed) {
       return
     }
 
-
-    // Get uploaded policies
     const savedPolicies =
       JSON.parse(
         localStorage.getItem(
@@ -317,14 +256,11 @@ function PoliciesPage() {
         )
       ) || []
 
-
-    // Remove it if it is an uploaded policy
     const updatedSavedPolicies =
       savedPolicies.filter(
         (policy) =>
           policy.id !== id
       )
-
 
     localStorage.setItem(
       'addedPolicies',
@@ -333,18 +269,14 @@ function PoliciesPage() {
       )
     )
 
-
-    // Remember deleted ID
     const updatedDeletedIds = [
       ...deletedPolicyIds,
       id,
     ]
 
-
     setDeletedPolicyIds(
       updatedDeletedIds
     )
-
 
     localStorage.setItem(
       'deletedPolicyIds',
@@ -354,7 +286,6 @@ function PoliciesPage() {
     )
   }
 
-
   // ==========================================
   // SEARCH + FILTER + SORT
   // ==========================================
@@ -362,7 +293,6 @@ function PoliciesPage() {
   const visiblePolicies =
     allPolicies
       .filter((policy) => {
-
         const matchesSearch =
           policy.name
             .toLowerCase()
@@ -370,11 +300,9 @@ function PoliciesPage() {
               search.toLowerCase()
             )
 
-
         const matchesFilter =
           filter === 'All' ||
           policy.status === filter
-
 
         return (
           matchesSearch &&
@@ -382,17 +310,13 @@ function PoliciesPage() {
         )
       })
 
-
       .sort((a, b) => {
-
         if (sort === 'Oldest') {
-
           return (
             new Date(a.created) -
             new Date(b.created)
           )
         }
-
 
         return (
           new Date(b.created) -
@@ -400,20 +324,14 @@ function PoliciesPage() {
         )
       })
 
-
   return (
     <div className="app-page">
-
-
       {/* ======================================
           TOP BAR
       ====================================== */}
 
       <header className="top-bar">
-
-
         <div className="brand-area">
-
           <span className="brand-name">
             Policy Review
           </span>
@@ -423,40 +341,29 @@ function PoliciesPage() {
           <span className="workspace-name">
             Policy Review Workspace
           </span>
-
         </div>
 
-
-
         <div className="top-right">
-
-
           <div className="search-box">
-
             <span>
               ⌕
             </span>
 
             <input
               type="text"
-              placeholder="Search policies, codes..."
+              placeholder="Search policies, guidelines..."
             />
-
           </div>
-
 
           <span className="top-icon">
             ?
           </span>
 
-
           <span className="top-icon">
             ⚙
           </span>
 
-
           <div className="user-area">
-
             <div className="user-avatar">
               SC
             </div>
@@ -464,124 +371,70 @@ function PoliciesPage() {
             <span>
               Sarah Chen
             </span>
-
           </div>
-
-
         </div>
-
-
       </header>
 
-
-
       <div className="app-body">
-
-
         {/* ======================================
             SIDEBAR
         ====================================== */}
 
         <aside className="sidebar">
-
-
           <Link
             to="/dashboard"
             className="nav-item"
           >
-
-            <span className="nav-icon">
-              ▦
-            </span>
-
             Dashboard
-
           </Link>
-
-
 
           <Link
             to="/reviews"
             className="nav-item"
           >
-
-            <span className="nav-icon">
-              ▣
-            </span>
-
-            Policy Reviews
-
+            Review Sessions
           </Link>
-
-
-
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
-
-            <span className="nav-icon">
-              ⊗
-            </span>
-
-            Guidelines
-
-          </Link>
-
-
 
           <Link
             to="/policies"
             className="nav-item active"
           >
-
-            <span className="nav-icon">
-              ⊗
-            </span>
-
-            Policies
-
+            Policy Database
           </Link>
 
-
+          <Link
+            to="/guidelines"
+            className="nav-item"
+          >
+            Guideline Database
+          </Link>
         </aside>
-
-
 
         {/* ======================================
             MAIN PAGE
         ====================================== */}
 
         <main className="policies-content">
-
-
           <h1>
             Policies
           </h1>
-
 
           <p className="policies-subtitle">
             View and manage your policies. Each entry contains a
             guideline with a log of all versions of that policy over time.
           </p>
 
-
-
           {/* ==================================
               CONTROLS
           ================================== */}
 
           <div className="policies-controls">
-
-
             {/* SEARCH */}
 
             <div className="policies-search">
-
               <span>
                 ⌕
               </span>
-
 
               <input
                 type="text"
@@ -593,16 +446,11 @@ function PoliciesPage() {
                   )
                 }
               />
-
             </div>
-
-
 
             {/* FILTER BUTTONS */}
 
             <div className="policies-filter-buttons">
-
-
               <button
                 type="button"
                 className={
@@ -616,8 +464,6 @@ function PoliciesPage() {
               >
                 All
               </button>
-
-
 
               <button
                 type="button"
@@ -635,8 +481,6 @@ function PoliciesPage() {
                 In Review
               </button>
 
-
-
               <button
                 type="button"
                 className={
@@ -652,21 +496,14 @@ function PoliciesPage() {
               >
                 Completed
               </button>
-
-
             </div>
-
-
 
             {/* SORT */}
 
             <div className="policies-sort">
-
-
               <span>
                 Sort by
               </span>
-
 
               <select
                 value={sort}
@@ -676,7 +513,6 @@ function PoliciesPage() {
                   )
                 }
               >
-
                 <option>
                   Most recent
                 </option>
@@ -684,28 +520,18 @@ function PoliciesPage() {
                 <option>
                   Oldest
                 </option>
-
               </select>
-
-
             </div>
-
-
           </div>
-
-
 
           {/* ==================================
               POLICY TABLE
           ================================== */}
 
           <div className="policies-table">
-
-
             {/* TABLE HEADER */}
 
             <div className="policies-table-header">
-
               <div>
                 POLICY NAME
               </div>
@@ -721,26 +547,19 @@ function PoliciesPage() {
               <div>
                 STATUS
               </div>
-
             </div>
-
-
 
             {/* TABLE ROWS */}
 
             {visiblePolicies.map(
               (policy) => (
-
                 <div
                   className="policies-table-row"
                   key={policy.id}
                 >
-
-
                   {/* POLICY NAME */}
 
                   <div className="policy-name-cell">
-
                     <Link
                       to={`/policies/${policy.id}`}
                       className="policy-name-link"
@@ -748,30 +567,22 @@ function PoliciesPage() {
                       {policy.name}
                     </Link>
 
-
                     <p>
                       {policy.description}
                     </p>
 
-
                     {policy.versionCount > 0 && (
-
                       <small className="policy-version-note">
                         {policy.versionCount === 1
                           ? '1 edited version saved'
                           : `${policy.versionCount} edited versions saved`}
                       </small>
-
                     )}
-
                   </div>
-
-
 
                   {/* DATE CREATED */}
 
                   <div className="policy-date-cell">
-
                     <span>
                       {policy.created}
                     </span>
@@ -779,15 +590,11 @@ function PoliciesPage() {
                     <small>
                       {policy.createdAge}
                     </small>
-
                   </div>
-
-
 
                   {/* LAST UPDATED */}
 
                   <div className="policy-date-cell">
-
                     <span>
                       {policy.updated}
                     </span>
@@ -795,16 +602,11 @@ function PoliciesPage() {
                     <small>
                       {policy.updatedAge}
                     </small>
-
                   </div>
-
-
 
                   {/* STATUS + DELETE */}
 
                   <div className="policy-status-actions">
-
-
                     <span
                       className={
                         policy.status ===
@@ -815,7 +617,6 @@ function PoliciesPage() {
                     >
                       {policy.status}
                     </span>
-
 
                     <button
                       type="button"
@@ -829,20 +630,11 @@ function PoliciesPage() {
                     >
                       Delete
                     </button>
-
-
                   </div>
-
-
                 </div>
-
               )
             )}
-
-
           </div>
-
-
 
           {/* ==================================
               NEW POLICY BUTTON
@@ -857,22 +649,14 @@ function PoliciesPage() {
               )
             }
           >
-
             New Policy
 
             <span>
               ＋
             </span>
-
           </button>
-
-
         </main>
-
-
       </div>
-
-
     </div>
   )
 }
