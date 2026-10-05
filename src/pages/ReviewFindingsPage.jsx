@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -6,238 +5,262 @@ function ReviewFindingsPage() {
   const navigate = useNavigate()
 
   // ==========================================
-  // CURRENT REVIEW
+  // CURRENT REVIEW SESSION
   // ==========================================
 
   const currentReview =
-    JSON.parse(localStorage.getItem('currentReview')) || null
+    JSON.parse(
+      localStorage.getItem('currentReview')
+    ) || null
 
-  const selectedPolicies = currentReview?.policies || []
-  const selectedGuidelines = currentReview?.guidelines || []
-  const guidelineMode = currentReview?.guidelineMode || 'automatic'
+  const selectedPolicies =
+    currentReview?.selectedPolicies ||
+    JSON.parse(
+      localStorage.getItem('selectedPolicies')
+    ) ||
+    []
 
-  // Each review has its own read/unread records.
-  const readStorageKey = `readFindings_${currentReview?.id ?? 'demo'}`
+  const selectedGuidelines =
+    currentReview?.selectedGuidelines ||
+    JSON.parse(
+      localStorage.getItem('selectedGuidelines')
+    ) ||
+    []
 
-  const [readFindingIds, setReadFindingIds] = useState(() => {
-    return JSON.parse(localStorage.getItem(readStorageKey)) || []
-  })
-
-  const [activeFilter, setActiveFilter] = useState('All')
-  const [sortBy, setSortBy] = useState('Priority')
+  const reviewName =
+    currentReview?.name ||
+    localStorage.getItem('newReviewName') ||
+    'Policy Review Session'
 
   // ==========================================
-  // EXAMPLE FINDINGS
+  // FILTER
   // ==========================================
 
-  // These remain demonstration findings.
-  // Real document analysis would require a backend.
+  const [activeFilter, setActiveFilter] =
+    useState('All')
 
-  const findings = [
+  // ==========================================
+  // DEMONSTRATION SCREENING RESULTS
+  // ==========================================
+
+  // These are prototype results that simulate
+  // the output of an automated policy screening.
+
+  const policyOne =
+    selectedPolicies[0]?.name ||
+    selectedPolicies[0]?.fileName ||
+    'Cardiac Coverage Policy'
+
+  const policyTwo =
+    selectedPolicies[1]?.name ||
+    selectedPolicies[1]?.fileName ||
+    selectedPolicies[0]?.name ||
+    selectedPolicies[0]?.fileName ||
+    'Diabetes Treatment Policy'
+
+  const policyThree =
+    selectedPolicies[2]?.name ||
+    selectedPolicies[2]?.fileName ||
+    selectedPolicies[0]?.name ||
+    selectedPolicies[0]?.fileName ||
+    'Oncology Coverage Policy'
+
+  const guidelineOne =
+    selectedGuidelines[0]?.name ||
+    '2026 Cardiac Coverage Guideline'
+
+  const guidelineTwo =
+    selectedGuidelines[1]?.name ||
+    selectedGuidelines[0]?.name ||
+    '2026 Diabetes Treatment Guideline'
+
+  const guidelineThree =
+    selectedGuidelines[2]?.name ||
+    selectedGuidelines[0]?.name ||
+    '2026 Oncology Coverage Guideline'
+
+  const results = [
     {
       id: 1,
 
-      policy:
-        selectedPolicies[0]?.fileName ||
-        selectedPolicies[0]?.name ||
-        'Cardiac_Coverage_Policy_v4.pdf',
+      policy: policyOne,
+
+      guideline: guidelineOne,
+
+      status: 'Suggested Change',
+
+      priority: 'High',
+
+      category: 'Coverage Criteria',
 
       policyCriterion: 'Criterion 4.2.1',
 
-      policyText:
-        'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A and B, including documented ischemia...',
-
-      guideline:
-        selectedGuidelines[0]?.name ||
-        (guidelineMode === 'automatic'
-          ? 'Automatically Selected Guidelines'
-          : '2026 Cardiac Coverage Guidelines'),
-
       guidelineCriterion: 'Criterion 4.2.1',
 
-      guidelineText:
-        'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, and C, including documented ischemia or significant anatomical findings...',
+      summary:
+        'Current policy criteria may be narrower than the selected reference guideline.',
 
-      type: 'Change',
-      priority: 'High',
+      rationale:
+        'The reference guideline includes an additional qualifying clinical pathway that is not clearly represented in the current policy language.',
+
+      policyText:
+        'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A and B, including documented ischemia.',
+
+      guidelineText:
+        'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, and C, including documented ischemia or significant anatomical findings.',
+
+      suggestedText:
+        'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, or C, including documented ischemia or significant anatomical findings.',
     },
 
     {
       id: 2,
 
-      policy:
-        selectedPolicies[1]?.fileName ||
-        selectedPolicies[1]?.name ||
-        selectedPolicies[0]?.fileName ||
-        selectedPolicies[0]?.name ||
-        'Diabetes_Treatment_Policy_v3.pdf',
+      policy: policyTwo,
 
-      policyCriterion: '',
+      guideline: guidelineTwo,
 
-      policyText:
-        'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except in certain cases...',
+      status: 'Suggested Change',
 
-      guideline:
-        selectedGuidelines[1]?.name ||
-        selectedGuidelines[0]?.name ||
-        (guidelineMode === 'automatic'
-          ? 'Automatically Selected Guidelines'
-          : '2026 Diabetes Treatment Guidelines'),
+      priority: 'Low',
+
+      category: 'Prior Authorization',
+
+      policyCriterion: 'Prior Authorization',
 
       guidelineCriterion: 'Criterion 7.1.2',
 
-      guidelineText:
-        'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except in certain cases...',
+      summary:
+        'Prior authorization wording should be clarified to better match the selected guideline.',
 
-      type: 'Change',
-      priority: 'Medium',
+      rationale:
+        'The policy and guideline are generally aligned, but the guideline provides clearer language regarding exceptions to prior authorization requirements.',
+
+      policyText:
+        'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except in certain cases.',
+
+      guidelineText:
+        'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, with exceptions for patients meeting established continuation-of-therapy criteria.',
+
+      suggestedText:
+        'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except for patients who meet established continuation-of-therapy criteria.',
     },
 
     {
       id: 3,
 
-      policy:
-        selectedPolicies[2]?.fileName ||
-        selectedPolicies[2]?.name ||
-        selectedPolicies[0]?.fileName ||
-        selectedPolicies[0]?.name ||
-        'Oncology_Policy_v2.pdf',
+      policy: policyThree,
 
-      policyCriterion: '',
+      guideline: guidelineThree,
+
+      status: 'No Change Needed',
+
+      priority: 'None',
+
+      category: 'Clinical Eligibility',
+
+      policyCriterion: 'Eligibility Criteria',
+
+      guidelineCriterion: 'Clinical Eligibility',
+
+      summary:
+        'The reviewed policy language is consistent with the selected reference guideline.',
+
+      rationale:
+        'The screening did not identify a meaningful difference between the current policy criteria and the selected reference guideline.',
 
       policyText:
-        'Coverage for targeted therapies is recommended for patients with prior intolerance to first-line treatment, except in...',
-
-      guideline:
-        selectedGuidelines[2]?.name ||
-        selectedGuidelines[0]?.name ||
-        (guidelineMode === 'automatic'
-          ? 'Automatically Selected Guidelines'
-          : '2026 Oncology Coverage Guidelines'),
-
-      guidelineCriterion: 'Criterion 11.4.3',
+        'Coverage is available when clinical eligibility requirements and documented treatment criteria are satisfied.',
 
       guidelineText:
-        'Coverage for targeted therapies is not recommended for patients with prior intolerance to first-line treatment, except in...',
+        'Coverage is appropriate when established clinical eligibility and treatment criteria are satisfied.',
 
-      type: 'Add',
-      priority: 'Low',
+      suggestedText: '',
     },
   ]
 
   // ==========================================
-  // FILTER COUNTS
+  // COUNTS
   // ==========================================
 
-  const filters = [
-    {
-      name: 'All',
-      count: findings.length,
-    },
-    {
-      name: 'Change',
-      count: findings.filter(
-        (finding) => finding.type === 'Change'
-      ).length,
-    },
-    {
-      name: 'Add',
-      count: findings.filter(
-        (finding) => finding.type === 'Add'
-      ).length,
-    },
-    {
-      name: 'Remove',
-      count: findings.filter(
-        (finding) => finding.type === 'Remove'
-      ).length,
-    },
-    {
-      name: 'High',
-      count: findings.filter(
-        (finding) => finding.priority === 'High'
-      ).length,
-    },
-    {
-      name: 'Medium',
-      count: findings.filter(
-        (finding) => finding.priority === 'Medium'
-      ).length,
-    },
-    {
-      name: 'Low',
-      count: findings.filter(
-        (finding) => finding.priority === 'Low'
-      ).length,
-    },
-  ]
+  const highPriorityCount =
+    results.filter(
+      (result) =>
+        result.status ===
+          'Suggested Change' &&
+        result.priority === 'High'
+    ).length
+
+  const lowPriorityCount =
+    results.filter(
+      (result) =>
+        result.status ===
+          'Suggested Change' &&
+        result.priority === 'Low'
+    ).length
+
+  const noChangeCount =
+    results.filter(
+      (result) =>
+        result.status === 'No Change Needed'
+    ).length
+
+  const actionCount =
+    highPriorityCount +
+    lowPriorityCount
 
   // ==========================================
-  // FILTER AND SORT
+  // FILTER RESULTS
   // ==========================================
 
-  const visibleFindings = findings
-    .filter((finding) => {
+  const visibleResults =
+    results.filter((result) => {
       if (activeFilter === 'All') {
         return true
       }
 
-      if (['Change', 'Add', 'Remove'].includes(activeFilter)) {
-        return finding.type === activeFilter
-      }
-
-      return finding.priority === activeFilter
-    })
-    .sort((a, b) => {
-      if (sortBy === 'Priority') {
-        const priorityOrder = {
-          High: 1,
-          Medium: 2,
-          Low: 3,
-        }
-
+      if (activeFilter === 'High Priority') {
         return (
-          priorityOrder[a.priority] -
-          priorityOrder[b.priority]
+          result.status ===
+            'Suggested Change' &&
+          result.priority === 'High'
         )
       }
 
-      if (sortBy === 'Policy') {
-        return a.policy.localeCompare(b.policy)
+      if (activeFilter === 'Low Priority') {
+        return (
+          result.status ===
+            'Suggested Change' &&
+          result.priority === 'Low'
+        )
       }
 
-      if (sortBy === 'Finding Type') {
-        return a.type.localeCompare(b.type)
+      if (
+        activeFilter ===
+        'No Change Needed'
+      ) {
+        return (
+          result.status ===
+          'No Change Needed'
+        )
       }
 
-      return 0
+      return true
     })
 
   // ==========================================
-  // OPEN FINDING AND MARK AS READ
+  // OPEN RECOMMENDATION
   // ==========================================
 
-  function openReport(finding) {
-    const updatedReadIds = readFindingIds.includes(finding.id)
-      ? readFindingIds
-      : [...readFindingIds, finding.id]
-
-    localStorage.setItem(
-      readStorageKey,
-      JSON.stringify(updatedReadIds)
-    )
-
-    setReadFindingIds(updatedReadIds)
-
+  function openRecommendation(result) {
     localStorage.setItem(
       'currentFinding',
-      JSON.stringify({
-        ...finding,
-        unread: false,
-      })
+      JSON.stringify(result)
     )
 
-    navigate(`/reviews/findings/${finding.id}/edit`)
+    navigate(
+      `/reviews/findings/${result.id}/edit`
+    )
   }
 
   // ==========================================
@@ -246,12 +269,14 @@ function ReviewFindingsPage() {
 
   function completeReview() {
     if (!currentReview) {
+      navigate('/reviews')
       return
     }
 
-    const confirmed = window.confirm(
-      'Are you sure you want to mark this review as completed?'
-    )
+    const confirmed =
+      window.confirm(
+        'Are you sure you want to mark this review session as completed?'
+      )
 
     if (!confirmed) {
       return
@@ -263,18 +288,26 @@ function ReviewFindingsPage() {
     }
 
     const savedReviews =
-      JSON.parse(localStorage.getItem('createdReviews')) || []
+      JSON.parse(
+        localStorage.getItem(
+          'createdReviews'
+        )
+      ) || []
 
-    const updatedReviews = savedReviews.map((review) => {
-      if (String(review.id) === String(currentReview.id)) {
-        return {
-          ...review,
-          status: 'Completed',
+    const updatedReviews =
+      savedReviews.map((review) => {
+        if (
+          String(review.id) ===
+          String(currentReview.id)
+        ) {
+          return {
+            ...review,
+            status: 'Completed',
+          }
         }
-      }
 
-      return review
-    })
+        return review
+      })
 
     localStorage.setItem(
       'createdReviews',
@@ -289,14 +322,11 @@ function ReviewFindingsPage() {
     navigate('/reviews')
   }
 
-  // ==========================================
-  // PAGE
-  // ==========================================
-
   return (
     <div className="app-page">
-
-      {/* TOP BAR */}
+      {/* ======================================
+          TOP BAR
+      ====================================== */}
 
       <header className="top-bar">
         <div className="brand-area">
@@ -313,310 +343,703 @@ function ReviewFindingsPage() {
 
         <div className="top-right">
           <div className="search-box">
-            <span>⌕</span>
+            <span>
+              ⌕
+            </span>
 
             <input
               type="text"
-              placeholder="Search policies, codes..."
+              placeholder="Search policies, guidelines..."
             />
           </div>
 
-          <span className="top-icon">?</span>
-          <span className="top-icon">⚙</span>
+          <span className="top-icon">
+            ?
+          </span>
+
+          <span className="top-icon">
+            ⚙
+          </span>
 
           <div className="user-area">
-            <div className="user-avatar">SC</div>
-            <span>Sarah Chen</span>
+            <div className="user-avatar">
+              SC
+            </div>
+
+            <span>
+              Sarah Chen
+            </span>
           </div>
         </div>
       </header>
 
       <div className="app-body">
-
-        {/* SIDEBAR */}
+        {/* ==================================
+            SIDEBAR
+        ================================== */}
 
         <aside className="sidebar">
+          <Link
+            to="/dashboard"
+            className="nav-item"
+          >
+            <span className="nav-icon">
+              ▦
+            </span>
 
-          <Link to="/dashboard" className="nav-item">
-            <span className="nav-icon">▦</span>
             Dashboard
           </Link>
 
-          <Link to="/reviews" className="nav-item active">
-            <span className="nav-icon">▣</span>
-            Policy Reviews
+          <Link
+            to="/reviews"
+            className="nav-item active"
+          >
+            <span className="nav-icon">
+              ▣
+            </span>
+
+            Review Sessions
           </Link>
 
-          <Link to="/guidelines" className="nav-item">
-            <span className="nav-icon">⊗</span>
-            Guidelines
+          <Link
+            to="/policies"
+            className="nav-item"
+          >
+            <span className="nav-icon">
+              ⊗
+            </span>
+
+            Policy Database
           </Link>
 
-          <Link to="/policies" className="nav-item">
-            <span className="nav-icon">⊗</span>
-            Policies
-          </Link>
+          <Link
+            to="/guidelines"
+            className="nav-item"
+          >
+            <span className="nav-icon">
+              ⊗
+            </span>
 
+            Guideline Database
+          </Link>
         </aside>
 
-        {/* MAIN CONTENT */}
+        {/* ==================================
+            MAIN CONTENT
+        ================================== */}
 
         <main className="review-findings-content">
-
-          <Link to="/reviews" className="back-link">
-            ← Back to Policy Reviews
+          <Link
+            to="/reviews"
+            className="back-link"
+          >
+            ← Back to Review Sessions
           </Link>
 
-          {/* TITLE AND COMPLETE REVIEW */}
+          {/* ==================================
+              TITLE
+          ================================== */}
 
           <div className="findings-title-row">
-
             <div>
+              <div
+                style={{
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  color: '#0078bf',
+                  marginBottom: '6px',
+                }}
+              >
+                REVIEW RESULTS
+              </div>
+
               <h1>
-                {currentReview?.name || 'Review Findings'}
+                {reviewName}
               </h1>
 
               <p className="review-findings-subtitle">
-                Identified policy changes based on the comparison
-                of uploaded policies with external guidelines.
+                Automated screening is complete.
+                Review the recommendations below
+                and take action on suggested policy
+                changes.
               </p>
             </div>
 
-            {currentReview &&
-              currentReview.status !== 'Completed' && (
-
-                <button
-                  type="button"
-                  className="complete-review-button"
-                  onClick={completeReview}
-                >
-                  Complete Review
-                </button>
-
-              )}
-
+            {currentReview?.status !==
+              'Completed' && (
+              <button
+                type="button"
+                className="complete-review-button"
+                onClick={completeReview}
+              >
+                Complete Review Session
+              </button>
+            )}
           </div>
 
-          {/* SELECTED DOCUMENTS */}
+          {/* ==================================
+              REVIEW SUMMARY
+          ================================== */}
+
+          <section
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(4, 1fr)',
+              gap: '14px',
+              margin: '24px 0',
+            }}
+          >
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #dddddd',
+                borderRadius: '6px',
+                padding: '18px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '12px',
+                  color: '#777',
+                  fontWeight: '700',
+                  marginBottom: '8px',
+                }}
+              >
+                POLICIES REVIEWED
+              </div>
+
+              <div
+                style={{
+                  fontSize: '27px',
+                  fontWeight: '700',
+                }}
+              >
+                {selectedPolicies.length}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#fff7f7',
+                border: '1px solid #e6b7b7',
+                borderRadius: '6px',
+                padding: '18px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '12px',
+                  color: '#8c2d2d',
+                  fontWeight: '700',
+                  marginBottom: '8px',
+                }}
+              >
+                HIGH PRIORITY
+              </div>
+
+              <div
+                style={{
+                  fontSize: '27px',
+                  fontWeight: '700',
+                  color: '#9f2424',
+                }}
+              >
+                {highPriorityCount}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#fffaf0',
+                border: '1px solid #e5d2a6',
+                borderRadius: '6px',
+                padding: '18px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '12px',
+                  color: '#8a6418',
+                  fontWeight: '700',
+                  marginBottom: '8px',
+                }}
+              >
+                LOW PRIORITY
+              </div>
+
+              <div
+                style={{
+                  fontSize: '27px',
+                  fontWeight: '700',
+                  color: '#8a6418',
+                }}
+              >
+                {lowPriorityCount}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#f4faf5',
+                border: '1px solid #b9d7bd',
+                borderRadius: '6px',
+                padding: '18px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '12px',
+                  color: '#387644',
+                  fontWeight: '700',
+                  marginBottom: '8px',
+                }}
+              >
+                NO CHANGE NEEDED
+              </div>
+
+              <div
+                style={{
+                  fontSize: '27px',
+                  fontWeight: '700',
+                  color: '#387644',
+                }}
+              >
+                {noChangeCount}
+              </div>
+            </div>
+          </section>
+
+          {/* ==================================
+              ACTION BANNER
+          ================================== */}
+
+          {actionCount > 0 && (
+            <section
+              style={{
+                padding: '14px 18px',
+                marginBottom: '20px',
+                background: '#fff8e7',
+                border:
+                  '1px solid #e5cf93',
+                borderLeft:
+                  '4px solid #c38b13',
+                borderRadius: '4px',
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems: 'center',
+                gap: '20px',
+              }}
+            >
+              <div>
+                <strong>
+                  {actionCount}{' '}
+                  {actionCount === 1
+                    ? 'recommendation requires'
+                    : 'recommendations require'}{' '}
+                  reviewer attention.
+                </strong>
+
+                <div
+                  style={{
+                    fontSize: '13px',
+                    color: '#666',
+                    marginTop: '3px',
+                  }}
+                >
+                  Review each suggested change
+                  before completing this session.
+                </div>
+              </div>
+
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: '#8a6418',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                ACTION REQUIRED
+              </span>
+            </section>
+          )}
+
+          {/* ==================================
+              SESSION REFERENCES
+          ================================== */}
 
           <section className="findings-selection-summary">
-
-            {/* GUIDELINES */}
-
             <div className="findings-summary-column">
               <h3>
-                External Guidelines Selected
+                Policies Reviewed
               </h3>
 
-              {guidelineMode === 'automatic' ? (
-
-                <p>
-                  • Automatically identify relevant guidelines
-                </p>
-
-              ) : selectedGuidelines.length > 0 ? (
-
-                selectedGuidelines.map((guideline) => (
-                  <p key={guideline.id}>
-                    • {guideline.name}
-                  </p>
-                ))
-
+              {selectedPolicies.length >
+              0 ? (
+                selectedPolicies.map(
+                  (policy) => (
+                    <p key={policy.id}>
+                      •{' '}
+                      {policy.name ||
+                        policy.fileName}
+                    </p>
+                  )
+                )
               ) : (
-
-                <p>• No guidelines selected</p>
-
+                <p>
+                  • No policies selected
+                </p>
               )}
             </div>
 
             <div className="findings-summary-divider"></div>
 
-            {/* POLICIES */}
-
             <div className="findings-summary-column">
-              <h3>Policies Selected</h3>
+              <h3>
+                Reference Guidelines
+              </h3>
 
-              {selectedPolicies.length > 0 ? (
-
-                selectedPolicies.map((policy) => (
-                  <p key={policy.id}>
-                    • {policy.name || policy.fileName}
-                  </p>
-                ))
-
+              {selectedGuidelines.length >
+              0 ? (
+                selectedGuidelines.map(
+                  (guideline) => (
+                    <p key={guideline.id}>
+                      • {guideline.name}
+                    </p>
+                  )
+                )
               ) : (
-
-                <p>• No policies selected</p>
-
+                <p>
+                  • No guidelines selected
+                </p>
               )}
             </div>
-
           </section>
 
-          {/* FILTER BAR */}
+          {/* ==================================
+              FILTERS
+          ================================== */}
 
-          <section className="findings-filter-bar">
+          <section
+            style={{
+              marginTop: '24px',
+              marginBottom: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '13px',
+                fontWeight: '700',
+                marginRight: '4px',
+              }}
+            >
+              Show:
+            </span>
 
-            <div className="findings-filter-left">
-
-              <span className="filter-label">
-                Filter
-              </span>
-
-              {filters.map((filter) => (
-
-                <button
-                  key={filter.name}
-                  type="button"
-                  className={
-                    activeFilter === filter.name
-                      ? 'finding-filter-button active'
-                      : 'finding-filter-button'
-                  }
-                  onClick={() =>
-                    setActiveFilter(filter.name)
-                  }
-                >
-                  {filter.name} ({filter.count})
-                </button>
-
-              ))}
-
-            </div>
-
-            <div className="findings-sort">
-              <span>Sort by</span>
-
-              <select
-                value={sortBy}
-                onChange={(event) =>
-                  setSortBy(event.target.value)
+            {[
+              {
+                name: 'All',
+                count: results.length,
+              },
+              {
+                name: 'High Priority',
+                count:
+                  highPriorityCount,
+              },
+              {
+                name: 'Low Priority',
+                count:
+                  lowPriorityCount,
+              },
+              {
+                name:
+                  'No Change Needed',
+                count:
+                  noChangeCount,
+              },
+            ].map((filter) => (
+              <button
+                key={filter.name}
+                type="button"
+                className={
+                  activeFilter ===
+                  filter.name
+                    ? 'finding-filter-button active'
+                    : 'finding-filter-button'
+                }
+                onClick={() =>
+                  setActiveFilter(
+                    filter.name
+                  )
                 }
               >
-                <option value="Priority">
-                  Priority
-                </option>
-
-                <option value="Policy">
-                  Policy
-                </option>
-
-                <option value="Finding Type">
-                  Finding Type
-                </option>
-              </select>
-            </div>
-
+                {filter.name} (
+                {filter.count})
+              </button>
+            ))}
           </section>
 
-          {/* FINDINGS TABLE */}
+          {/* ==================================
+              RESULTS
+          ================================== */}
 
-          <section className="findings-table">
+          <section
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              paddingBottom: '30px',
+            }}
+          >
+            {visibleResults.map(
+              (result) => {
+                const highPriority =
+                  result.priority ===
+                  'High'
 
-            <div className="findings-table-header">
-              <div>POLICY</div>
-              <div>GUIDELINES REFERENCED</div>
-              <div></div>
-            </div>
+                const lowPriority =
+                  result.priority ===
+                  'Low'
 
-            <div className="findings-scroll-area">
-
-              {visibleFindings.map((finding) => {
-
-                const isUnread =
-                  !readFindingIds.includes(finding.id)
+                const noChange =
+                  result.status ===
+                  'No Change Needed'
 
                 return (
-
                   <div
-                    className="finding-row"
-                    key={finding.id}
+                    key={result.id}
+                    style={{
+                      background: '#ffffff',
+                      border: noChange
+                        ? '1px solid #b9d7bd'
+                        : highPriority
+                        ? '1px solid #dfb0b0'
+                        : '1px solid #e2d0a6',
+                      borderLeft: noChange
+                        ? '5px solid #4e8b59'
+                        : highPriority
+                        ? '5px solid #b53939'
+                        : '5px solid #c18a20',
+                      borderRadius: '5px',
+                      padding: '18px 20px',
+                    }}
                   >
-
-                    {/* POLICY */}
-
-                    <div className="finding-policy-column">
-
-                      <strong>
-                        {finding.policy}
-                      </strong>
-
-                      {finding.policyCriterion && (
-                        <span className="finding-criterion">
-                          {finding.policyCriterion}
-                        </span>
-                      )}
-
-                      <p>
-                        {finding.policyText}
-                      </p>
-
-                    </div>
-
-                    {/* GUIDELINE */}
-
-                    <div className="finding-guideline-column">
-
-                      <strong>
-                        {finding.guideline}
-                      </strong>
-
-                      <span className="finding-criterion">
-                        {finding.guidelineCriterion}
-                      </span>
-
-                      <p>
-                        {finding.guidelineText}
-                      </p>
-
-                    </div>
-
-                    {/* ACTION */}
-
-                    <div className="finding-action-column">
-
-                      {isUnread && (
-                        <span className="finding-unread">
-                          ● Unread
-                        </span>
-                      )}
-
-                      <button
-                        type="button"
-                        className="view-edit-report-button"
-                        onClick={() =>
-                          openReport(finding)
-                        }
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent:
+                          'space-between',
+                        alignItems:
+                          'flex-start',
+                        gap: '24px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: 1,
+                        }}
                       >
-                        View and edit report
-                      </button>
+                        {/* STATUS */}
 
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems:
+                              'center',
+                            gap: '8px',
+                            flexWrap:
+                              'wrap',
+                            marginBottom:
+                              '9px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              display:
+                                'inline-block',
+                              padding:
+                                '4px 9px',
+                              borderRadius:
+                                '12px',
+                              fontSize:
+                                '11px',
+                              fontWeight:
+                                '700',
+                              background:
+                                noChange
+                                  ? '#eaf5ec'
+                                  : highPriority
+                                  ? '#f9e5e5'
+                                  : '#fff2d5',
+                              color:
+                                noChange
+                                  ? '#387644'
+                                  : highPriority
+                                  ? '#9f2424'
+                                  : '#8a6418',
+                            }}
+                          >
+                            {result.status}
+                          </span>
+
+                          {!noChange && (
+                            <span
+                              style={{
+                                fontSize:
+                                  '11px',
+                                fontWeight:
+                                  '700',
+                                color:
+                                  highPriority
+                                    ? '#9f2424'
+                                    : '#8a6418',
+                              }}
+                            >
+                              {result.priority.toUpperCase()}{' '}
+                              PRIORITY
+                            </span>
+                          )}
+                        </div>
+
+                        {/* POLICY */}
+
+                        <h2
+                          style={{
+                            fontSize:
+                              '17px',
+                            margin:
+                              '0 0 5px',
+                          }}
+                        >
+                          {result.policy}
+                        </h2>
+
+                        <div
+                          style={{
+                            fontSize:
+                              '12px',
+                            color:
+                              '#777',
+                            marginBottom:
+                              '12px',
+                          }}
+                        >
+                          {result.category}
+                          {'  •  '}
+                          Reference:{' '}
+                          {result.guideline}
+                        </div>
+
+                        {/* SUMMARY */}
+
+                        <p
+                          style={{
+                            margin:
+                              '0 0 12px',
+                            lineHeight:
+                              '1.5',
+                            color:
+                              '#444',
+                          }}
+                        >
+                          {result.summary}
+                        </p>
+
+                        <div
+                          style={{
+                            fontSize:
+                              '12px',
+                            color:
+                              '#777',
+                          }}
+                        >
+                          Policy section:{' '}
+                          <strong>
+                            {
+                              result.policyCriterion
+                            }
+                          </strong>
+                          {'  •  '}
+                          Guideline section:{' '}
+                          <strong>
+                            {
+                              result.guidelineCriterion
+                            }
+                          </strong>
+                        </div>
+                      </div>
+
+                      {/* ACTION */}
+
+                      <div
+                        style={{
+                          minWidth:
+                            '180px',
+                          textAlign:
+                            'right',
+                        }}
+                      >
+                        {noChange ? (
+                          <div
+                            style={{
+                              color:
+                                '#387644',
+                              fontSize:
+                                '13px',
+                              fontWeight:
+                                '700',
+                              paddingTop:
+                                '8px',
+                            }}
+                          >
+                            ✓ No action
+                            required
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="view-edit-report-button"
+                            onClick={() =>
+                              openRecommendation(
+                                result
+                              )
+                            }
+                          >
+                            Review Recommendation
+                          </button>
+                        )}
+                      </div>
                     </div>
-
                   </div>
-
                 )
-              })}
+              }
+            )}
 
-              {visibleFindings.length === 0 && (
-                <div
-                  style={{
-                    padding: '30px',
-                    textAlign: 'center',
-                  }}
-                >
-                  No findings match this filter.
-                </div>
-              )}
-
-            </div>
-
+            {visibleResults.length ===
+              0 && (
+              <div
+                style={{
+                  padding: '35px',
+                  textAlign: 'center',
+                  background:
+                    '#ffffff',
+                  border:
+                    '1px solid #dddddd',
+                }}
+              >
+                No results match this
+                filter.
+              </div>
+            )}
           </section>
-
         </main>
-
       </div>
-
     </div>
   )
 }
