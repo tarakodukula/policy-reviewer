@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 function PolicyReviewPage() {
-
   // ==========================================
   // SEARCH / FILTER / SORT
   // ==========================================
@@ -11,81 +10,66 @@ function PolicyReviewPage() {
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
 
-
   // ==========================================
-  // ORIGINAL REVIEWS
+  // ORIGINAL / DEMO REVIEW SESSIONS
   // ==========================================
 
   const originalReviews = [
     {
       id: 1,
-      name: 'Cardiac Coverage Policy',
+      name: 'Cardiac Coverage Review',
       description:
-        'Policy review for cardiac procedures and treatments.',
-      document: 'Cardiac_Coverage_Policy_v4.pdf',
-      version: 'v4.0',
+        'Review of cardiac coverage policies against current clinical guidelines.',
+      policies: 3,
       guideline: '2026 Cardiac Coverage Guidelines',
-      guidelineVersion: 'v2.1',
       date: 'Sep 23, 2026',
       age: '2 days ago',
       status: 'In Review',
       findings: 14,
     },
-
     {
       id: 2,
-      name: 'Diabetes Treatment Policy',
+      name: 'Diabetes Treatment Review',
       description:
-        'Policy review for diabetes management and treatment.',
-      document: 'Diabetes_Treatment_Policy_v3.pdf',
-      version: 'v3.0',
+        'Review of diabetes management and treatment policies.',
+      policies: 2,
       guideline: '2026 Diabetes Treatment Guidelines',
-      guidelineVersion: 'v1.8',
       date: 'Sep 18, 2026',
       age: '6 days ago',
       status: 'Completed',
       findings: 8,
     },
-
     {
       id: 3,
-      name: 'Oncology Coverage Policy',
+      name: 'Oncology Coverage Review',
       description:
-        'Policy review for oncology services and treatments.',
-      document: 'Oncology_Policy_v2.pdf',
-      version: 'v2.0',
+        'Review of oncology coverage policies and treatment criteria.',
+      policies: 4,
       guideline: 'Oncology Coverage Guidelines',
-      guidelineVersion: 'v1.4',
       date: 'Sep 10, 2026',
       age: '14 days ago',
       status: 'Completed',
       findings: 21,
     },
-
     {
       id: 4,
-      name: 'Orthopedic Surgery Policy',
+      name: 'Orthopedic Surgery Review',
       description:
-        'Policy review for orthopedic procedures and rehab.',
-      document: 'Ortho_Surgery_Policy_v5.pdf',
-      version: 'v5.0',
+        'Review of orthopedic procedure and rehabilitation policies.',
+      policies: 3,
       guideline: '2026 Orthopedic Guidelines',
-      guidelineVersion: 'v2.0',
       date: 'Sep 5, 2026',
       age: '19 days ago',
       status: 'In Review',
       findings: 0,
     },
-
     {
       id: 5,
-      name: 'Mental Health Coverage Policy',
+      name: 'Mental Health Coverage Review',
       description:
-        'Policy review for mental health services and treatment.',
-      document: 'Mental_Health_Policy_v3.pdf',
-      version: 'v3.0',
+        'Review of mental health coverage and treatment policies.',
+      policies: 2,
       guideline: '2026 Mental Health Guidelines',
-      guidelineVersion: 'v1.6',
       date: 'Aug 28, 2026',
       age: '27 days ago',
       status: 'Completed',
@@ -93,78 +77,115 @@ function PolicyReviewPage() {
     },
   ]
 
-
   // ==========================================
-  // GET NEW REVIEWS
+  // GET REVIEW SESSIONS CREATED BY USER
   // ==========================================
 
   const savedReviews =
-    JSON.parse(
-      localStorage.getItem('createdReviews')
-    ) || []
+    JSON.parse(localStorage.getItem('createdReviews')) || []
 
+  const createdReviews = savedReviews.map((review) => ({
+    ...review,
 
-  // Put new reviews above original reviews
+    policies:
+      review.policies ||
+      review.selectedPolicies?.length ||
+      1,
+
+    guideline:
+      review.guideline ||
+      review.selectedGuidelines?.[0]?.name ||
+      'Reference guidelines selected',
+
+    status:
+      review.status ||
+      'In Review',
+
+    findings:
+      review.findings ?? 0,
+
+    age:
+      review.age ||
+      'Recently',
+  }))
+
+  // ==========================================
+  // COMBINE REVIEW SESSIONS
+  // ==========================================
+
   const allReviews = [
-    ...savedReviews,
+    ...createdReviews,
     ...originalReviews,
   ]
 
+  // ==========================================
+  // COUNTS
+  // ==========================================
+
+  const activeCount = allReviews.filter(
+    (review) => review.status === 'In Review'
+  ).length
+
+  const completedCount = allReviews.filter(
+    (review) => review.status === 'Completed'
+  ).length
+
+  const totalFindings = allReviews.reduce(
+    (total, review) =>
+      total + Number(review.findings || 0),
+    0
+  )
 
   // ==========================================
   // SEARCH + FILTER + SORT
   // ==========================================
 
-  const visibleReviews = allReviews
+  const visibleReviews = [...allReviews]
     .filter((review) => {
+      const reviewName =
+        review.name || 'Untitled Review Session'
 
       const matchesSearch =
-        review.name
+        reviewName
           .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          )
-
+          .includes(search.toLowerCase())
 
       const matchesFilter =
         filter === 'All' ||
         review.status === filter
-
 
       return (
         matchesSearch &&
         matchesFilter
       )
     })
-
     .sort((a, b) => {
+      const aDate = new Date(a.date)
+      const bDate = new Date(b.date)
+
+      const aTime = Number.isNaN(aDate.getTime())
+        ? 0
+        : aDate.getTime()
+
+      const bTime = Number.isNaN(bDate.getTime())
+        ? 0
+        : bDate.getTime()
 
       if (sort === 'Oldest') {
-        return (
-          new Date(a.date) -
-          new Date(b.date)
-        )
+        return aTime - bTime
       }
 
-      return (
-        new Date(b.date) -
-        new Date(a.date)
-      )
+      return bTime - aTime
     })
-
 
   return (
     <div className="app-page">
-
-
       {/* ======================================
           TOP BAR
       ====================================== */}
 
       <header className="top-bar">
-
         <div className="brand-area">
-
           <span className="brand-name">
             Policy Review
           </span>
@@ -174,38 +195,29 @@ function PolicyReviewPage() {
           <span className="workspace-name">
             Policy Review Workspace
           </span>
-
         </div>
 
-
         <div className="top-right">
-
           <div className="search-box">
-
             <span>
               ⌕
             </span>
 
             <input
               type="text"
-              placeholder="Search policies, codes..."
+              placeholder="Search policies, guidelines..."
             />
-
           </div>
-
 
           <span className="top-icon">
             ?
           </span>
 
-
           <span className="top-icon">
             ⚙
           </span>
 
-
           <div className="user-area">
-
             <div className="user-avatar">
               SC
             </div>
@@ -213,116 +225,168 @@ function PolicyReviewPage() {
             <span>
               Sarah Chen
             </span>
-
           </div>
-
         </div>
-
       </header>
 
-
-
       <div className="app-body">
-
-
         {/* ======================================
             SIDEBAR
         ====================================== */}
 
         <aside className="sidebar">
-
-
           <Link
             to="/dashboard"
             className="nav-item"
           >
-
             <span className="nav-icon">
               ▦
             </span>
 
             Dashboard
-
           </Link>
-
 
           <Link
             to="/reviews"
             className="nav-item active"
           >
-
             <span className="nav-icon">
               ▣
             </span>
 
-            Policy Reviews
-
+            Review Sessions
           </Link>
-
-
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
-
-            <span className="nav-icon">
-              ⊗
-            </span>
-
-            Guidelines
-
-          </Link>
-
 
           <Link
             to="/policies"
             className="nav-item"
           >
-
             <span className="nav-icon">
               ⊗
             </span>
 
-            Policies
-
+            Policy Database
           </Link>
 
+          <Link
+            to="/guidelines"
+            className="nav-item"
+          >
+            <span className="nav-icon">
+              ⊗
+            </span>
 
+            Guideline Database
+          </Link>
         </aside>
-
-
 
         {/* ======================================
             MAIN PAGE
         ====================================== */}
 
         <main className="policy-reviews-content">
+          {/* ==================================
+              PAGE HEADER
+          ================================== */}
 
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: '24px',
+              marginBottom: '28px',
+            }}
+          >
+            <div>
+              <h1
+                style={{
+                  marginBottom: '8px',
+                }}
+              >
+                Review Sessions
+              </h1>
 
-          <h1>
-            Policy Reviews
-          </h1>
+              <p
+                className="page-subtitle"
+                style={{
+                  marginBottom: 0,
+                }}
+              >
+                Create, continue, and monitor policy review sessions.
+              </p>
+            </div>
 
+            <Link
+              to="/reviews/new"
+              className="new-review-button"
+              style={{
+                position: 'static',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Start a Review Session
 
-          <p className="page-subtitle">
-            All policy review sessions created by you
-          </p>
+              <span>
+                +
+              </span>
+            </Link>
+          </div>
 
+          {/* ==================================
+              SESSION SUMMARY
+          ================================== */}
 
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(3, minmax(0, 1fr))',
+              gap: '16px',
+              marginBottom: '28px',
+            }}
+          >
+            <div className="stat-card">
+              <span>
+                ACTIVE SESSIONS
+              </span>
+
+              <strong>
+                {activeCount}
+              </strong>
+            </div>
+
+            <div className="stat-card">
+              <span>
+                COMPLETED SESSIONS
+              </span>
+
+              <strong>
+                {completedCount}
+              </strong>
+            </div>
+
+            <div className="stat-card">
+              <span>
+                TOTAL FINDINGS
+              </span>
+
+              <strong>
+                {totalFindings}
+              </strong>
+            </div>
+          </div>
 
           {/* ==================================
               CONTROLS
           ================================== */}
 
           <div className="review-controls">
-
-
-            {/* SEARCH */}
-
             <input
               className="review-search"
               type="text"
-              placeholder="⌕   Search policy reviews..."
+              placeholder="⌕   Search review sessions..."
               value={search}
               onChange={(event) =>
                 setSearch(
@@ -331,13 +395,7 @@ function PolicyReviewPage() {
               }
             />
 
-
-
-            {/* FILTERS */}
-
             <div className="filter-buttons">
-
-
               <button
                 type="button"
                 className={
@@ -351,7 +409,6 @@ function PolicyReviewPage() {
               >
                 All
               </button>
-
 
               <button
                 type="button"
@@ -367,7 +424,6 @@ function PolicyReviewPage() {
                 In Review
               </button>
 
-
               <button
                 type="button"
                 className={
@@ -381,20 +437,12 @@ function PolicyReviewPage() {
               >
                 Completed
               </button>
-
-
             </div>
 
-
-
-            {/* SORT */}
-
             <div className="sort-area">
-
               <span>
                 Sort by
               </span>
-
 
               <select
                 value={sort}
@@ -404,7 +452,6 @@ function PolicyReviewPage() {
                   )
                 }
               >
-
                 <option>
                   Most recent
                 </option>
@@ -412,38 +459,26 @@ function PolicyReviewPage() {
                 <option>
                   Oldest
                 </option>
-
               </select>
-
-
             </div>
-
-
           </div>
 
-
-
           {/* ==================================
-              REVIEW TABLE
+              REVIEW SESSION TABLE
           ================================== */}
 
           <div className="policy-review-table">
-
-
-            {/* TABLE HEADER */}
-
             <div className="policy-review-header">
-
               <span>
-                REVIEW NAME
+                REVIEW SESSION
               </span>
 
               <span>
-                POLICY DOCUMENT
+                POLICIES
               </span>
 
               <span>
-                EXTERNAL GUIDELINE
+                REFERENCE GUIDELINES
               </span>
 
               <span>
@@ -457,170 +492,125 @@ function PolicyReviewPage() {
               <span>
                 FINDINGS
               </span>
-
             </div>
 
+            {visibleReviews.map((review) => (
+              <div
+                className="policy-review-row"
+                key={review.id}
+              >
+                {/* SESSION NAME */}
 
+                <div>
+                  <strong className="review-name">
+                    {review.name ||
+                      'Untitled Review Session'}
+                  </strong>
 
-            {/* REVIEW ROWS */}
-
-            {visibleReviews.map(
-              (review) => (
-
-                <div
-                  className="policy-review-row"
-                  key={review.id}
-                >
-
-
-                  {/* REVIEW NAME */}
-
-                  <div>
-
-                    <strong className="review-name">
-                      {review.name}
-                    </strong>
-
-                    <p>
-                      {review.description}
-                    </p>
-
-                  </div>
-
-
-
-                  {/* POLICY DOCUMENT */}
-
-                  <div className="document-cell">
-
-                    <span className="pdf-icon">
-                      PDF
-                    </span>
-
-
-                    <div>
-
-                      <strong>
-                        {review.document}
-                      </strong>
-
-                      <small>
-                        {review.version}
-                      </small>
-
-                    </div>
-
-                  </div>
-
-
-
-                  {/* GUIDELINE */}
-
-                  <div className="guideline-cell">
-
-                    <span className="guideline-icon">
-                      ⌜
-                    </span>
-
-
-                    <div>
-
-                      <strong>
-                        {review.guideline}
-                      </strong>
-
-                      <small>
-                        {review.guidelineVersion}
-                      </small>
-
-                    </div>
-
-                  </div>
-
-
-
-                  {/* DATE */}
-
-                  <div className="date-cell">
-
-                    <span>
-                      {review.date}
-                    </span>
-
-                    <small>
-                      {review.age}
-                    </small>
-
-                  </div>
-
-
-
-                  {/* STATUS */}
-
-                  <div>
-
-                    <span
-                      className={
-                        review.status ===
-                        'Completed'
-                          ? 'status completed'
-                          : 'status in-review'
-                      }
-                    >
-                      {review.status}
-                    </span>
-
-                  </div>
-
-
-
-                  {/* FINDINGS */}
-
-                  <div className="findings-cell">
-
-                    <strong>
-                      {review.findings}
-                    </strong>
-
-                    <small>
-                      identified
-                    </small>
-
-                  </div>
-
-
+                  <p>
+                    {review.description ||
+                      'Policy review session.'}
+                  </p>
                 </div>
 
-              )
+                {/* POLICIES */}
+
+                <div className="document-cell">
+                  <span className="pdf-icon">
+                    {review.policies || 1}
+                  </span>
+
+                  <div>
+                    <strong>
+                      {review.policies || 1}
+                      {' '}
+                      {(review.policies || 1) === 1
+                        ? 'Policy'
+                        : 'Policies'}
+                    </strong>
+
+                    <small>
+                      included in session
+                    </small>
+                  </div>
+                </div>
+
+                {/* GUIDELINES */}
+
+                <div className="guideline-cell">
+                  <span className="guideline-icon">
+                    ⌜
+                  </span>
+
+                  <div>
+                    <strong>
+                      {review.guideline ||
+                        'Not selected'}
+                    </strong>
+
+                    <small>
+                      Reference guideline
+                    </small>
+                  </div>
+                </div>
+
+                {/* DATE */}
+
+                <div className="date-cell">
+                  <span>
+                    {review.date ||
+                      'Recently'}
+                  </span>
+
+                  <small>
+                    {review.age ||
+                      'Recently'}
+                  </small>
+                </div>
+
+                {/* STATUS */}
+
+                <div>
+                  <span
+                    className={
+                      review.status === 'Completed'
+                        ? 'status completed'
+                        : 'status in-review'
+                    }
+                  >
+                    {review.status ||
+                      'In Review'}
+                  </span>
+                </div>
+
+                {/* FINDINGS */}
+
+                <div className="findings-cell">
+                  <strong>
+                    {review.findings || 0}
+                  </strong>
+
+                  <small>
+                    identified
+                  </small>
+                </div>
+              </div>
+            ))}
+
+            {visibleReviews.length === 0 && (
+              <div
+                style={{
+                  padding: '35px',
+                  textAlign: 'center',
+                  color: '#777',
+                }}
+              >
+                No review sessions match your search.
+              </div>
             )}
-
-
           </div>
-
-
-
-          {/* ==================================
-              NEW REVIEW
-          ================================== */}
-
-          <Link
-            to="/reviews/new"
-            className="new-review-button"
-          >
-            New Review
-
-            <span>
-              +
-            </span>
-          </Link>
-
-
         </main>
-
-
       </div>
-
-
     </div>
   )
 }
