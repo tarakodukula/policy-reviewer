@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom'
 
 function DashboardPage() {
-
   // ==========================================
-  // ORIGINAL / DEMO REVIEWS
+  // ORIGINAL / DEMO REVIEW SESSIONS
   // ==========================================
 
   const originalReviews = [
@@ -13,6 +12,7 @@ function DashboardPage() {
       status: 'In Review',
       date: 'Oct 22, 2026',
       reviewer: 'Sarah Chen',
+      attention: 5,
     },
     {
       id: 'dashboard-2',
@@ -20,6 +20,7 @@ function DashboardPage() {
       status: 'Completed',
       date: 'Oct 20, 2026',
       reviewer: 'Sarah Chen',
+      attention: 0,
     },
     {
       id: 'dashboard-3',
@@ -27,6 +28,7 @@ function DashboardPage() {
       status: 'Completed',
       date: 'Oct 19, 2026',
       reviewer: 'Dr. Aris Thorne',
+      attention: 0,
     },
     {
       id: 'dashboard-4',
@@ -34,6 +36,7 @@ function DashboardPage() {
       status: 'In Review',
       date: 'Oct 18, 2026',
       reviewer: 'Sarah Chen',
+      attention: 3,
     },
     {
       id: 'dashboard-5',
@@ -41,6 +44,7 @@ function DashboardPage() {
       status: 'Completed',
       date: 'Oct 15, 2026',
       reviewer: 'Dr. J. Patel',
+      attention: 0,
     },
     {
       id: 'dashboard-6',
@@ -48,47 +52,28 @@ function DashboardPage() {
       status: 'In Review',
       date: 'Oct 14, 2026',
       reviewer: 'Sarah Chen',
+      attention: 6,
     },
   ]
 
-
   // ==========================================
-  // GET REVIEWS CREATED BY USER
+  // GET REVIEW SESSIONS CREATED BY USER
   // ==========================================
 
   const savedReviews =
-    JSON.parse(
-      localStorage.getItem('createdReviews')
-    ) || []
+    JSON.parse(localStorage.getItem('createdReviews')) || []
 
-
-  // Make the saved review information match
-  // the format used by this dashboard
-  const createdReviews =
-    savedReviews.map((review) => ({
-
-      id:
-        review.id,
-
-      name:
-        review.name,
-
-      status:
-        review.status ||
-        'In Review',
-
-      date:
-        review.date ||
-        'Recently',
-
-      reviewer:
-        'Sarah Chen',
-
-    }))
-
+  const createdReviews = savedReviews.map((review) => ({
+    id: review.id,
+    name: review.name,
+    status: review.status || 'In Review',
+    date: review.date || 'Recently',
+    reviewer: review.reviewer || 'Sarah Chen',
+    attention: review.attention || 0,
+  }))
 
   // ==========================================
-  // COMBINE REVIEWS
+  // COMBINE REVIEW SESSIONS
   // ==========================================
 
   const allReviews = [
@@ -96,42 +81,37 @@ function DashboardPage() {
     ...originalReviews,
   ]
 
-
   // ==========================================
-  // ACTIVE REVIEW COUNT
-  // ==========================================
-
-  const activeReviewCount =
-    allReviews.filter(
-      (review) =>
-        review.status === 'In Review'
-    ).length
-
-
-  // ==========================================
-  // RECENT REVIEWS
-  // Only show the 6 most recent
+  // DASHBOARD COUNTS
   // ==========================================
 
-  const recentReviews = [
-  ...createdReviews,
-  ...originalReviews,
-].slice(0, 6)
+  const activeReviewCount = allReviews.filter(
+    (review) => review.status === 'In Review'
+  ).length
 
+  const completedReviewCount = allReviews.filter(
+    (review) => review.status === 'Completed'
+  ).length
+
+  const itemsRequiringAttention = allReviews.reduce(
+    (total, review) => total + (review.attention || 0),
+    0
+  )
+
+  // ==========================================
+  // RECENT REVIEW SESSIONS
+  // ==========================================
+
+  const recentReviews = allReviews.slice(0, 5)
 
   return (
     <div className="app-page">
-
-
       {/* ======================================
-          TOP GREEN BAR
+          TOP BAR
       ====================================== */}
 
       <header className="top-bar">
-
-
         <div className="brand-area">
-
           <span className="brand-name">
             Policy Review
           </span>
@@ -141,39 +121,27 @@ function DashboardPage() {
           <span className="workspace-name">
             Policy Review Workspace
           </span>
-
         </div>
 
-
         <div className="top-right">
-
-
           <div className="search-box">
-
-            <span>
-              ⌕
-            </span>
+            <span>⌕</span>
 
             <input
               type="text"
-              placeholder="Search policies, codes..."
+              placeholder="Search policies, guidelines..."
             />
-
           </div>
-
 
           <span className="top-icon">
             ?
           </span>
 
-
           <span className="top-icon">
             ⚙
           </span>
 
-
           <div className="user-area">
-
             <div className="user-avatar">
               SC
             </div>
@@ -181,157 +149,234 @@ function DashboardPage() {
             <span>
               Sarah Chen
             </span>
-
           </div>
-
-
         </div>
-
-
       </header>
 
-
-
       <div className="app-body">
-
-
         {/* ======================================
             LEFT SIDEBAR
         ====================================== */}
 
         <aside className="sidebar">
-
-
           <Link
             to="/dashboard"
             className="nav-item active"
           >
-
             <span className="nav-icon">
               ▦
             </span>
 
             Dashboard
-
           </Link>
-
 
           <Link
             to="/reviews"
             className="nav-item"
           >
-
             <span className="nav-icon">
               ▣
             </span>
 
-            Policy Reviews
-
+            Review Sessions
           </Link>
-
-
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
-
-            <span className="nav-icon">
-              ⊗
-            </span>
-
-            Guidelines
-
-          </Link>
-
 
           <Link
             to="/policies"
             className="nav-item"
           >
-
             <span className="nav-icon">
               ⊗
             </span>
 
-            Policies
-
+            Policy Database
           </Link>
 
+          <Link
+            to="/guidelines"
+            className="nav-item"
+          >
+            <span className="nav-icon">
+              ⊗
+            </span>
 
+            Guideline Database
+          </Link>
         </aside>
-
-
 
         {/* ======================================
             DASHBOARD CONTENT
         ====================================== */}
 
         <main className="dashboard-content">
-
-
-          <h1>
-            Dashboard
-          </h1>
-
-
-
           {/* ==================================
-              STAT CARDS
+              PAGE INTRODUCTION
           ================================== */}
 
-          <div className="stat-cards">
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: '24px',
+              marginBottom: '28px',
+            }}
+          >
+            <div>
+              <h1
+                style={{
+                  marginBottom: '8px',
+                }}
+              >
+                Dashboard
+              </h1>
 
+              <p
+                style={{
+                  margin: 0,
+                  color: '#666',
+                  maxWidth: '650px',
+                  lineHeight: '1.5',
+                }}
+              >
+                Monitor review sessions, policy recommendations,
+                and items that require your attention.
+              </p>
+            </div>
 
+            <Link
+              to="/reviews/new"
+              className="primary-button"
+              style={{
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              + Start a Review Session
+            </Link>
+          </div>
+
+          {/* ==================================
+              OVERVIEW CARDS
+          ================================== */}
+
+          <div
+            className="stat-cards"
+            style={{
+              gridTemplateColumns:
+                'repeat(3, minmax(0, 1fr))',
+            }}
+          >
             <div className="stat-card">
-
               <span>
-                ACTIVE REVIEWS
+                ACTIVE REVIEW SESSIONS
               </span>
 
               <strong>
                 {activeReviewCount}
               </strong>
 
+              <small
+                style={{
+                  color: '#777',
+                  marginTop: '6px',
+                }}
+              >
+                Currently in progress
+              </small>
             </div>
 
-
-
             <div className="stat-card">
-
               <span>
-                PENDING RECOMMENDATIONS
+                ITEMS REQUIRING ATTENTION
               </span>
 
               <strong>
-                34
+                {itemsRequiringAttention}
               </strong>
 
+              <small
+                style={{
+                  color: '#777',
+                  marginTop: '6px',
+                }}
+              >
+                Suggested changes to review
+              </small>
             </div>
 
+            <div className="stat-card">
+              <span>
+                COMPLETED SESSIONS
+              </span>
 
+              <strong>
+                {completedReviewCount}
+              </strong>
+
+              <small
+                style={{
+                  color: '#777',
+                  marginTop: '6px',
+                }}
+              >
+                Review sessions completed
+              </small>
+            </div>
           </div>
 
-
+          {/* ==================================
+              DASHBOARD GRID
+          ================================== */}
 
           <div className="dashboard-grid">
-
-
             {/* ==================================
-                RECENT REVIEWS
+                RECENT REVIEW SESSIONS
             ================================== */}
 
             <section className="reviews-card">
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '18px',
+                }}
+              >
+                <div>
+                  <h2
+                    style={{
+                      marginBottom: '5px',
+                    }}
+                  >
+                    Recent Review Sessions
+                  </h2>
 
+                  <p
+                    style={{
+                      margin: 0,
+                      color: '#777',
+                      fontSize: '13px',
+                    }}
+                  >
+                    Continue an existing review or view recent activity.
+                  </p>
+                </div>
 
-              <h2>
-                Recent Policy Reviews
-              </h2>
-
+                <Link
+                  to="/reviews"
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                  }}
+                >
+                  View all sessions
+                </Link>
+              </div>
 
               <div className="review-table-header">
-
                 <span>
-                  REVIEW SESSION NAME
+                  REVIEW SESSION
                 </span>
 
                 <span>
@@ -345,167 +390,129 @@ function DashboardPage() {
                 <span>
                   REVIEWER
                 </span>
-
               </div>
 
+              {recentReviews.map((review) => (
+                <div
+                  className="review-row"
+                  key={review.id}
+                >
+                  <strong>
+                    {review.name}
+                  </strong>
 
-
-              {recentReviews.map(
-                (review) => (
-
-                  <div
-                    className="review-row"
-                    key={review.id}
+                  <span
+                    className={
+                      review.status === 'Completed'
+                        ? 'status completed'
+                        : 'status in-review'
+                    }
                   >
+                    {review.status}
+                  </span>
 
+                  <span>
+                    {review.date}
+                  </span>
 
-                    <strong>
-                      {review.name}
-                    </strong>
-
-
-                    <span
-                      className={
-                        review.status ===
-                        'Completed'
-                          ? 'status completed'
-                          : 'status in-review'
-                      }
-                    >
-                      {review.status}
-                    </span>
-
-
-                    <span>
-                      {review.date}
-                    </span>
-
-
-                    <span>
-                      {review.reviewer}
-                    </span>
-
-
-                  </div>
-
-                )
-              )}
-
-
+                  <span>
+                    {review.reviewer}
+                  </span>
+                </div>
+              ))}
             </section>
 
-
-
             {/* ==================================
-                RECOMMENDATION SUMMARY
+                ATTENTION SUMMARY
             ================================== */}
 
             <section className="recommendation-card">
-
-
               <h2>
-                Recommendation Summary
+                Items Requiring Attention
               </h2>
 
-
               <p>
-                Identified policy actions by category
+                Recommendations identified during policy review.
               </p>
 
-
-
               <div className="recommendation-item">
-
-
                 <div className="recommendation-label">
-
                   <strong>
-                    Criteria Update Needed
+                    High Priority Changes
                   </strong>
 
                   <span>
-                    14
+                    5
                   </span>
-
                 </div>
-
 
                 <div className="progress-background">
-
-                  <div className="progress criteria"></div>
-
+                  <div
+                    className="progress criteria"
+                    style={{
+                      width: '75%',
+                    }}
+                  ></div>
                 </div>
-
-
               </div>
 
-
-
               <div className="recommendation-item">
-
-
                 <div className="recommendation-label">
-
                   <strong>
-                    Guideline Mismatch
+                    Low Priority Changes
                   </strong>
 
                   <span>
-                    8
+                    6
                   </span>
-
                 </div>
-
 
                 <div className="progress-background">
-
-                  <div className="progress mismatch"></div>
-
+                  <div
+                    className="progress mismatch"
+                    style={{
+                      width: '55%',
+                    }}
+                  ></div>
                 </div>
-
-
               </div>
 
-
-
               <div className="recommendation-item">
-
-
                 <div className="recommendation-label">
-
                   <strong>
                     New Evidence Available
                   </strong>
 
                   <span>
-                    12
+                    3
                   </span>
-
                 </div>
-
 
                 <div className="progress-background">
-
-                  <div className="progress evidence"></div>
-
+                  <div
+                    className="progress evidence"
+                    style={{
+                      width: '35%',
+                    }}
+                  ></div>
                 </div>
-
-
               </div>
 
-
+              <Link
+                to="/reviews"
+                style={{
+                  display: 'inline-block',
+                  marginTop: '18px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                }}
+              >
+                Go to Review Sessions →
+              </Link>
             </section>
-
-
           </div>
-
-
         </main>
-
-
       </div>
-
-
     </div>
   )
 }
