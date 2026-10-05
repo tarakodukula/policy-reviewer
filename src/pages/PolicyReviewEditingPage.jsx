@@ -4,14 +4,12 @@ import { useState } from 'react'
 function PolicyReviewEditingPage() {
   const navigate = useNavigate()
 
-
   // ==========================================
-  // GET THE FINDING THAT WAS CLICKED
+  // CURRENT FINDING
   // ==========================================
 
   const savedFinding =
     localStorage.getItem('currentFinding')
-
 
   const currentFinding = savedFinding
     ? JSON.parse(savedFinding)
@@ -19,134 +17,144 @@ function PolicyReviewEditingPage() {
         id: 1,
 
         policy:
-          'Cardiac_Coverage_Policy_v4.pdf',
+          'Cardiac Coverage Policy',
 
         policyCriterion:
           'Criterion 4.2.1',
 
-        policyText:
-          'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A and B, including documented ischemia...',
-
         guideline:
-          '2026 Cardiac Coverage Guidelines',
+          '2026 Cardiac Coverage Guideline',
 
         guidelineCriterion:
           'Criterion 4.2.1',
 
+        status:
+          'Suggested Change',
+
+        priority:
+          'High',
+
+        category:
+          'Coverage Criteria',
+
+        summary:
+          'Current policy criteria may be narrower than the selected reference guideline.',
+
+        rationale:
+          'The reference guideline includes an additional qualifying clinical pathway that is not clearly represented in the current policy language.',
+
+        policyText:
+          'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A and B, including documented ischemia.',
+
         guidelineText:
-          'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, and C, including documented ischemia or significant anatomical findings...',
+          'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, and C, including documented ischemia or significant anatomical findings.',
 
-        type: 'Change',
-
-        priority: 'High',
+        suggestedText:
+          'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, or C, including documented ischemia or significant anatomical findings.',
       }
 
-
   // ==========================================
-  // POLICY EDITOR TEXT
-  // ==========================================
-
-  const [policyText, setPolicyText] =
-    useState(() => {
-
-      // Start the editor using the policy
-      // information from the finding clicked
-      return `${currentFinding.policy}
-
-${currentFinding.policyCriterion || ''}
-
-${currentFinding.policyText || ''}`
-    })
-
-
-  // ==========================================
-  // RECOMMENDATION
+  // REVIEW SESSION
   // ==========================================
 
-  const recommendations = [
-    {
-      id: currentFinding.id,
+  const currentReview =
+    JSON.parse(
+      localStorage.getItem('currentReview')
+    ) || null
+
+  const reviewName =
+    currentReview?.name ||
+    'Policy Review Session'
+
+  // ==========================================
+  // EDITING
+  // ==========================================
+
+  const [isEditing, setIsEditing] =
+    useState(false)
+
+  const [editedText, setEditedText] =
+    useState(
+      currentFinding.suggestedText ||
+        currentFinding.guidelineText ||
+        currentFinding.policyText ||
+        ''
+    )
+
+  // ==========================================
+  // SAVE RECOMMENDATION DECISION
+  // ==========================================
+
+  function saveDecision(
+    decision,
+    finalText = ''
+  ) {
+    const existingDecisions =
+      JSON.parse(
+        localStorage.getItem(
+          'recommendationDecisions'
+        )
+      ) || []
+
+    const newDecision = {
+      id: Date.now(),
+
+      reviewId:
+        currentReview?.id || null,
+
+      findingId:
+        currentFinding.id,
 
       policy:
         currentFinding.policy,
 
-      policyCriterion:
-        currentFinding.policyCriterion ||
-        'No criterion listed',
-
-      policyText:
-        currentFinding.policyText,
-
       guideline:
         currentFinding.guideline,
 
-      guidelineCriterion:
-        currentFinding.guidelineCriterion ||
-        'No criterion listed',
-
-      guidelineText:
-        currentFinding.guidelineText,
-
-      type:
-        currentFinding.type ||
-        'Change',
-
       priority:
-        currentFinding.priority ||
-        'Medium',
+        currentFinding.priority,
 
-      recommendation:
-        getRecommendation(
-          currentFinding.type
-        ),
+      decision,
 
-      proposedChange:
-        getProposedChange(
-          currentFinding
-        ),
-    },
-  ]
+      finalText,
 
+      decidedAt:
+        new Date().toISOString(),
 
-  // ==========================================
-  // RECOMMENDATION TEXT
-  // ==========================================
-
-  function getRecommendation(type) {
-
-    if (type === 'Add') {
-      return 'Add the guideline requirement to the current policy to improve alignment.'
+      reviewer:
+        'Sarah Chen',
     }
 
-    if (type === 'Remove') {
-      return 'Remove the identified policy language because it is not supported by the selected guideline.'
-    }
+    const otherDecisions =
+      existingDecisions.filter(
+        (item) =>
+          !(
+            String(item.reviewId) ===
+              String(
+                currentReview?.id || null
+              ) &&
+            String(item.findingId) ===
+              String(currentFinding.id)
+          )
+      )
 
-    return 'Update the policy language to align with the selected external guideline.'
+    localStorage.setItem(
+      'recommendationDecisions',
+      JSON.stringify([
+        ...otherDecisions,
+        newDecision,
+      ])
+    )
   }
 
-
   // ==========================================
-  // PROPOSED CHANGE
-  // ==========================================
-
-  function getProposedChange(finding) {
-
-    if (finding.guidelineText) {
-      return finding.guidelineText
-    }
-
-    return 'Update this policy section according to the selected guideline.'
-  }
-
-
-  // ==========================================
-  // SAVE CHANGES
+  // CREATE POLICY VERSION
   // ==========================================
 
-  function saveChanges() {
-
-    // Get any previously saved policy versions
+  function createPolicyVersion(
+    content,
+    decision
+  ) {
     const oldVersions =
       JSON.parse(
         localStorage.getItem(
@@ -154,23 +162,24 @@ ${currentFinding.policyText || ''}`
         )
       ) || []
 
-
-    // Create the new version
     const newVersion = {
-
       id: Date.now(),
 
       originalPolicy:
         currentFinding.policy,
 
-      content:
-        policyText,
+      content,
 
       createdAt:
         new Date().toISOString(),
 
       sourceFinding:
         currentFinding.id,
+
+      reviewId:
+        currentReview?.id || null,
+
+      reviewName,
 
       guideline:
         currentFinding.guideline,
@@ -179,52 +188,133 @@ ${currentFinding.policyText || ''}`
         currentFinding.policyCriterion,
 
       type:
-        currentFinding.type,
+        'Change',
 
       priority:
         currentFinding.priority,
+
+      decision,
+
+      reviewer:
+        'Sarah Chen',
     }
 
-
-    // Add new version
     const updatedVersions = [
       ...oldVersions,
       newVersion,
     ]
 
-
-    // Save it
     localStorage.setItem(
       'policyVersions',
       JSON.stringify(updatedVersions)
     )
 
-
-    // Also remember the newest edited version
     localStorage.setItem(
       'latestPolicyVersion',
       JSON.stringify(newVersion)
     )
+  }
 
+  // ==========================================
+  // ACCEPT SUGGESTED CHANGE
+  // ==========================================
 
-    // Return to findings
+  function acceptRecommendation() {
+    const acceptedText =
+      currentFinding.suggestedText ||
+      currentFinding.guidelineText ||
+      ''
+
+    const confirmed =
+      window.confirm(
+        'Accept this suggested change and save it as a new policy version?'
+      )
+
+    if (!confirmed) {
+      return
+    }
+
+    saveDecision(
+      'Accepted',
+      acceptedText
+    )
+
+    createPolicyVersion(
+      acceptedText,
+      'Accepted'
+    )
+
     navigate('/reviews/findings')
   }
 
+  // ==========================================
+  // SAVE EDITED CHANGE
+  // ==========================================
+
+  function saveEditedRecommendation() {
+    if (!editedText.trim()) {
+      alert(
+        'The edited policy language cannot be empty.'
+      )
+      return
+    }
+
+    const confirmed =
+      window.confirm(
+        'Save your edited policy language as a new policy version?'
+      )
+
+    if (!confirmed) {
+      return
+    }
+
+    saveDecision(
+      'Accepted with Edits',
+      editedText
+    )
+
+    createPolicyVersion(
+      editedText,
+      'Accepted with Edits'
+    )
+
+    navigate('/reviews/findings')
+  }
+
+  // ==========================================
+  // REJECT RECOMMENDATION
+  // ==========================================
+
+  function rejectRecommendation() {
+    const confirmed =
+      window.confirm(
+        'Reject this recommendation? The current policy language will remain unchanged.'
+      )
+
+    if (!confirmed) {
+      return
+    }
+
+    saveDecision(
+      'Rejected',
+      currentFinding.policyText || ''
+    )
+
+    navigate('/reviews/findings')
+  }
+
+  // ==========================================
+  // PAGE
+  // ==========================================
 
   return (
     <div className="app-page">
-
-
       {/* ======================================
-          HEADER
+          TOP BAR
       ====================================== */}
 
       <header className="top-bar">
-
-
         <div className="brand-area">
-
           <span className="brand-name">
             Policy Review
           </span>
@@ -234,39 +324,29 @@ ${currentFinding.policyText || ''}`
           <span className="workspace-name">
             Policy Review Workspace
           </span>
-
         </div>
 
-
         <div className="top-right">
-
-
           <div className="search-box">
-
             <span>
               ⌕
             </span>
 
             <input
               type="text"
-              placeholder="Search policies, codes..."
+              placeholder="Search policies, guidelines..."
             />
-
           </div>
-
 
           <span className="top-icon">
             ?
           </span>
 
-
           <span className="top-icon">
             ⚙
           </span>
 
-
           <div className="user-area">
-
             <div className="user-avatar">
               SC
             </div>
@@ -274,353 +354,718 @@ ${currentFinding.policyText || ''}`
             <span>
               Sarah Chen
             </span>
-
           </div>
-
-
         </div>
-
-
       </header>
 
-
-
       <div className="app-body">
-
-
         {/* ==================================
             SIDEBAR
         ================================== */}
 
         <aside className="sidebar">
-
-
           <Link
             to="/dashboard"
             className="nav-item"
           >
-
             <span className="nav-icon">
               ▦
             </span>
 
             Dashboard
-
           </Link>
-
 
           <Link
             to="/reviews"
             className="nav-item active"
           >
-
             <span className="nav-icon">
               ▣
             </span>
 
-            Policy Reviews
-
+            Review Sessions
           </Link>
-
-
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
-
-            <span className="nav-icon">
-              ⊗
-            </span>
-
-            Guidelines
-
-          </Link>
-
 
           <Link
             to="/policies"
             className="nav-item"
           >
-
             <span className="nav-icon">
               ⊗
             </span>
 
-            Policies
-
+            Policy Database
           </Link>
 
+          <Link
+            to="/guidelines"
+            className="nav-item"
+          >
+            <span className="nav-icon">
+              ⊗
+            </span>
 
+            Guideline Database
+          </Link>
         </aside>
-
-
 
         {/* ==================================
             MAIN CONTENT
         ================================== */}
 
         <main className="policy-editor-content">
-
-
           <Link
             to="/reviews/findings"
             className="back-link"
           >
-            ← Back to Review Findings
+            ← Back to Review Results
           </Link>
 
-
-
-          <h1>
-            Policy Review and Editor
-          </h1>
-
-
-          <p className="policy-editor-subtitle">
-            View the recommended change based on the guideline finding, and directly edit and save a new version of the policy.
-          </p>
-
-
-
           {/* ==================================
-              RECOMMENDATIONS
+              PAGE TITLE
           ================================== */}
 
-          <section className="editor-card">
-
-
-            <h2>
-              Policy Document(s)
-            </h2>
-
-
-            <p className="editor-card-description">
-              Review the policy criterion, guideline criterion, and recommended change.
-            </p>
-
-
-
-            <div className="editor-recommendations-table">
-
-
-              {/* TABLE HEADER */}
-
-              <div className="editor-table-header">
-
-                <div>
-                  POLICY CRITERION
-                </div>
-
-                <div>
-                  GUIDELINE CRITERION
-                </div>
-
-                <div>
-                  RECOMMENDATION
-                </div>
-
-              </div>
-
-
-
-              <div className="editor-table-scroll">
-
-
-                {recommendations.map(
-                  (item) => (
-
-                    <div
-                      className="editor-recommendation-row"
-                      key={item.id}
-                    >
-
-
-                      {/* POLICY */}
-
-                      <div className="editor-policy-column">
-
-                        <strong>
-                          {item.policy}
-                        </strong>
-
-
-                        {item.policyCriterion && (
-
-                          <span>
-                            {item.policyCriterion}
-                          </span>
-
-                        )}
-
-
-                        <p>
-                          {item.policyText}
-                        </p>
-
-                      </div>
-
-
-
-                      {/* GUIDELINE */}
-
-                      <div className="editor-guideline-column">
-
-                        <strong>
-                          {item.guideline}
-                        </strong>
-
-
-                        <span>
-                          {item.guidelineCriterion}
-                        </span>
-
-
-                        <p>
-                          {item.guidelineText}
-                        </p>
-
-                      </div>
-
-
-
-                      {/* RECOMMENDATION */}
-
-                      <div className="editor-recommendation-column">
-
-
-                        <div className="recommendation-tags">
-
-
-                          <span
-                            className={`recommendation-type ${item.type.toLowerCase()}`}
-                          >
-                            {item.type.toUpperCase()}
-                          </span>
-
-
-                          <span
-                            className={`recommendation-priority ${item.priority.toLowerCase()}`}
-                          >
-                            {item.priority.toUpperCase()}
-                          </span>
-
-
-                        </div>
-
-
-
-                        <strong className="recommendation-text">
-                          {item.recommendation}
-                        </strong>
-
-
-
-                        <span className="proposed-change-label">
-                          Proposed Change:
-                        </span>
-
-
-
-                        <div className="proposed-change-box">
-                          {item.proposedChange}
-                        </div>
-
-
-                      </div>
-
-
-                    </div>
-
-                  )
-                )}
-
-
-              </div>
-
-
+          <div
+            style={{
+              marginBottom: '24px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '12px',
+                fontWeight: '700',
+                color: '#0078bf',
+                marginBottom: '6px',
+              }}
+            >
+              REVIEW RECOMMENDATION
             </div>
 
+            <h1
+              style={{
+                marginBottom: '7px',
+              }}
+            >
+              Inspect Suggested Policy Change
+            </h1>
 
-          </section>
-
-
-
-          {/* ==================================
-              POLICY DOCUMENT EDITOR
-          ================================== */}
-
-          <section className="editor-card policy-document-editor">
-
-
-            <h2>
-              Policy Document Editor
-            </h2>
-
-
-            <p className="editor-card-description">
-              Directly edit the current version of the policy document based on the recommended change. Press Save Changes when finished editing to save a new policy version.
+            <p className="policy-editor-subtitle">
+              Review why this change was
+              recommended, compare the policy
+              with the reference guideline, and
+              decide whether to accept, edit, or
+              reject the recommendation.
             </p>
-
-
-
-            <textarea
-              className="policy-editor-textarea"
-              value={policyText}
-              onChange={(event) =>
-                setPolicyText(
-                  event.target.value
-                )
-              }
-            />
-
-
-          </section>
-
-
-
-          {/* ==================================
-              BOTTOM BUTTONS
-          ================================== */}
-
-          <div className="policy-editor-actions">
-
-
-            {/* CANCEL */}
-
-            <button
-              type="button"
-              className="cancel-review-button"
-              onClick={() =>
-                navigate(
-                  '/reviews/findings'
-                )
-              }
-            >
-              Cancel
-            </button>
-
-
-
-            {/* SAVE */}
-
-            <button
-              type="button"
-              className="start-review-button"
-              onClick={saveChanges}
-            >
-              Save Changes
-            </button>
-
-
           </div>
 
+          {/* ==================================
+              SESSION / POLICY SUMMARY
+          ================================== */}
 
+          <section
+            style={{
+              background: '#ffffff',
+              border: '1px solid #dddddd',
+              borderRadius: '6px',
+              padding: '18px 20px',
+              marginBottom: '18px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                gap: '25px',
+                alignItems: 'flex-start',
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: '#777',
+                    fontWeight: '700',
+                    marginBottom: '5px',
+                  }}
+                >
+                  REVIEW SESSION
+                </div>
+
+                <strong>
+                  {reviewName}
+                </strong>
+              </div>
+
+              <div
+                style={{
+                  flex: 1,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: '#777',
+                    fontWeight: '700',
+                    marginBottom: '5px',
+                  }}
+                >
+                  POLICY
+                </div>
+
+                <strong>
+                  {currentFinding.policy}
+                </strong>
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: '#777',
+                    fontWeight: '700',
+                    marginBottom: '5px',
+                  }}
+                >
+                  PRIORITY
+                </div>
+
+                <span
+                  style={{
+                    display:
+                      'inline-block',
+                    padding: '4px 9px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    background:
+                      currentFinding.priority ===
+                      'High'
+                        ? '#f9e5e5'
+                        : '#fff2d5',
+                    color:
+                      currentFinding.priority ===
+                      'High'
+                        ? '#9f2424'
+                        : '#8a6418',
+                  }}
+                >
+                  {(
+                    currentFinding.priority ||
+                    'Low'
+                  ).toUpperCase()}{' '}
+                  PRIORITY
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* ==================================
+              WHY THIS WAS FLAGGED
+          ================================== */}
+
+          <section
+            style={{
+              background:
+                currentFinding.priority ===
+                'High'
+                  ? '#fff7f7'
+                  : '#fffaf0',
+              border:
+                currentFinding.priority ===
+                'High'
+                  ? '1px solid #e4b8b8'
+                  : '1px solid #e5d2a6',
+              borderLeft:
+                currentFinding.priority ===
+                'High'
+                  ? '5px solid #b53939'
+                  : '5px solid #c18a20',
+              borderRadius: '5px',
+              padding: '18px 20px',
+              marginBottom: '20px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '12px',
+                fontWeight: '700',
+                color:
+                  currentFinding.priority ===
+                  'High'
+                    ? '#9f2424'
+                    : '#8a6418',
+                marginBottom: '7px',
+              }}
+            >
+              WHY THIS WAS FLAGGED
+            </div>
+
+            <h2
+              style={{
+                fontSize: '17px',
+                margin: '0 0 8px',
+              }}
+            >
+              {currentFinding.summary ||
+                'Suggested policy change'}
+            </h2>
+
+            <p
+              style={{
+                margin: 0,
+                lineHeight: '1.6',
+                color: '#444',
+              }}
+            >
+              {currentFinding.rationale ||
+                'The selected reference guideline contains language that may require an update to the current policy.'}
+            </p>
+          </section>
+
+          {/* ==================================
+              POLICY VS GUIDELINE
+          ================================== */}
+
+          <section
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                '1fr 1fr',
+              gap: '16px',
+              marginBottom: '20px',
+            }}
+          >
+            {/* CURRENT POLICY */}
+
+            <div
+              style={{
+                background: '#ffffff',
+                border:
+                  '1px solid #dddddd',
+                borderRadius: '6px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  padding: '13px 16px',
+                  background: '#f5f6f7',
+                  borderBottom:
+                    '1px solid #dddddd',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: '#777',
+                    fontWeight: '700',
+                    marginBottom: '4px',
+                  }}
+                >
+                  CURRENT POLICY LANGUAGE
+                </div>
+
+                <strong>
+                  {currentFinding.policy}
+                </strong>
+              </div>
+
+              <div
+                style={{
+                  padding: '18px',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: '#777',
+                    marginBottom: '10px',
+                  }}
+                >
+                  {currentFinding.policyCriterion ||
+                    'Policy criterion'}
+                </div>
+
+                <p
+                  style={{
+                    margin: 0,
+                    lineHeight: '1.7',
+                    color: '#333',
+                  }}
+                >
+                  {currentFinding.policyText}
+                </p>
+              </div>
+            </div>
+
+            {/* GUIDELINE */}
+
+            <div
+              style={{
+                background: '#ffffff',
+                border:
+                  '1px solid #b8d3e3',
+                borderRadius: '6px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  padding: '13px 16px',
+                  background: '#f0f7fb',
+                  borderBottom:
+                    '1px solid #b8d3e3',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: '#557b91',
+                    fontWeight: '700',
+                    marginBottom: '4px',
+                  }}
+                >
+                  REFERENCE GUIDELINE
+                </div>
+
+                <strong>
+                  {currentFinding.guideline}
+                </strong>
+              </div>
+
+              <div
+                style={{
+                  padding: '18px',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: '#777',
+                    marginBottom: '10px',
+                  }}
+                >
+                  {currentFinding.guidelineCriterion ||
+                    'Guideline criterion'}
+                </div>
+
+                <p
+                  style={{
+                    margin: 0,
+                    lineHeight: '1.7',
+                    color: '#333',
+                  }}
+                >
+                  {currentFinding.guidelineText}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* ==================================
+              SUGGESTED CHANGE
+          ================================== */}
+
+          <section
+            style={{
+              background: '#ffffff',
+              border: '1px solid #dddddd',
+              borderRadius: '6px',
+              marginBottom: '20px',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                padding: '15px 18px',
+                borderBottom:
+                  '1px solid #dddddd',
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems: 'center',
+                gap: '20px',
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    fontSize: '17px',
+                    margin: '0 0 4px',
+                  }}
+                >
+                  Suggested Policy Language
+                </h2>
+
+                <div
+                  style={{
+                    fontSize: '13px',
+                    color: '#666',
+                  }}
+                >
+                  Review the proposed change
+                  before accepting or editing it.
+                </div>
+              </div>
+
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setIsEditing(true)
+                  }
+                  style={{
+                    border:
+                      '1px solid #888',
+                    background: '#ffffff',
+                    borderRadius: '4px',
+                    padding:
+                      '8px 13px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                  }}
+                >
+                  Edit Suggested Change
+                </button>
+              )}
+            </div>
+
+            <div
+              style={{
+                padding: '18px',
+              }}
+            >
+              {isEditing ? (
+                <>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      color: '#555',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    EDIT POLICY LANGUAGE
+                  </div>
+
+                  <textarea
+                    value={editedText}
+                    onChange={(event) =>
+                      setEditedText(
+                        event.target.value
+                      )
+                    }
+                    style={{
+                      width: '100%',
+                      minHeight: '150px',
+                      boxSizing:
+                        'border-box',
+                      padding: '14px',
+                      border:
+                        '1px solid #aaaaaa',
+                      borderRadius: '4px',
+                      fontFamily:
+                        'inherit',
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      resize: 'vertical',
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent:
+                        'flex-end',
+                      gap: '10px',
+                      marginTop: '12px',
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditedText(
+                          currentFinding.suggestedText ||
+                            currentFinding.guidelineText ||
+                            currentFinding.policyText ||
+                            ''
+                        )
+
+                        setIsEditing(
+                          false
+                        )
+                      }}
+                      style={{
+                        border:
+                          '1px solid #999',
+                        background:
+                          '#ffffff',
+                        borderRadius:
+                          '4px',
+                        padding:
+                          '9px 14px',
+                        cursor:
+                          'pointer',
+                      }}
+                    >
+                      Cancel Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      className="start-review-button"
+                      onClick={
+                        saveEditedRecommendation
+                      }
+                    >
+                      Save Edited Change
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div
+                  style={{
+                    padding: '16px',
+                    background:
+                      '#f5faf6',
+                    border:
+                      '1px solid #c9dfcd',
+                    borderLeft:
+                      '4px solid #4e8b59',
+                    borderRadius: '4px',
+                    lineHeight: '1.7',
+                    color: '#333',
+                  }}
+                >
+                  {currentFinding.suggestedText ||
+                    currentFinding.guidelineText}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* ==================================
+              DECISION AREA
+          ================================== */}
+
+          {!isEditing && (
+            <section
+              style={{
+                background: '#f7f8f8',
+                border:
+                  '1px solid #dddddd',
+                borderRadius: '6px',
+                padding: '18px 20px',
+                marginBottom: '30px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent:
+                    'space-between',
+                  alignItems: 'center',
+                  gap: '30px',
+                }}
+              >
+                <div>
+                  <h2
+                    style={{
+                      fontSize: '16px',
+                      margin:
+                        '0 0 5px',
+                    }}
+                  >
+                    Reviewer Decision
+                  </h2>
+
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: '13px',
+                      color: '#666',
+                    }}
+                  >
+                    Accept the suggested
+                    change, edit it first,
+                    or reject the
+                    recommendation.
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '10px',
+                    flexWrap: 'wrap',
+                    justifyContent:
+                      'flex-end',
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={
+                      rejectRecommendation
+                    }
+                    style={{
+                      padding:
+                        '10px 16px',
+                      border:
+                        '1px solid #a83b3b',
+                      borderRadius:
+                        '4px',
+                      background:
+                        '#ffffff',
+                      color: '#9f2424',
+                      cursor:
+                        'pointer',
+                      fontWeight:
+                        '700',
+                    }}
+                  >
+                    Reject Recommendation
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsEditing(true)
+                    }
+                    style={{
+                      padding:
+                        '10px 16px',
+                      border:
+                        '1px solid #777',
+                      borderRadius:
+                        '4px',
+                      background:
+                        '#ffffff',
+                      color: '#333',
+                      cursor:
+                        'pointer',
+                      fontWeight:
+                        '700',
+                    }}
+                  >
+                    Edit Suggested Change
+                  </button>
+
+                  <button
+                    type="button"
+                    className="start-review-button"
+                    onClick={
+                      acceptRecommendation
+                    }
+                  >
+                    Accept Suggested Change
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
         </main>
-
-
       </div>
-
-
     </div>
   )
 }
