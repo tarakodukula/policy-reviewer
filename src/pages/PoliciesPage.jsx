@@ -1,5 +1,7 @@
+
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { getGuidelinesForPolicy } from '../data/guidelineMappings'
 
 function PoliciesPage() {
   const navigate = useNavigate()
@@ -7,15 +9,27 @@ function PoliciesPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
+  const [hoveredPolicyId, setHoveredPolicyId] = useState(null)
+
+  // ==========================================
+  // READ SAVED DATA
+  // ==========================================
+
+  function getSavedArray(key) {
+    try {
+      const data = JSON.parse(localStorage.getItem(key))
+      return Array.isArray(data) ? data : []
+    } catch {
+      return []
+    }
+  }
 
   // ==========================================
   // DELETED POLICIES
   // ==========================================
 
   const [deletedPolicyIds, setDeletedPolicyIds] = useState(
-    JSON.parse(
-      localStorage.getItem('deletedPolicyIds')
-    ) || []
+    () => getSavedArray('deletedPolicyIds')
   )
 
   // ==========================================
@@ -26,144 +40,80 @@ function PoliciesPage() {
     {
       id: 1,
       name: 'Cardiac Coverage Policy',
-      description:
-        'Policy review for cardiac procedures and treatments.',
-      fileName:
-        'Cardiac_Coverage_Policy_v4.pdf',
-      created:
-        'Sep 23, 2026',
-      createdAge:
-        '2 days ago',
-      updated:
-        'Sep 23, 2026',
-      updatedAge:
-        '2 days ago',
-      status:
-        'In Review',
+      description: 'Policy review for cardiac procedures and treatments.',
+      fileName: 'Cardiac_Coverage_Policy_v4.pdf',
+      created: 'Sep 23, 2026',
+      createdAge: '2 days ago',
+      updated: 'Sep 23, 2026',
+      updatedAge: '2 days ago',
+      status: 'In Review',
     },
-
     {
       id: 2,
       name: 'Diabetes Treatment Policy',
-      description:
-        'Policy review for diabetes management and treatment.',
-      fileName:
-        'Diabetes_Treatment_Policy_v3.pdf',
-      created:
-        'Sep 18, 2026',
-      createdAge:
-        '6 days ago',
-      updated:
-        'Sep 18, 2026',
-      updatedAge:
-        '6 days ago',
-      status:
-        'Completed',
+      description: 'Policy review for diabetes management and treatment.',
+      fileName: 'Diabetes_Treatment_Policy_v3.pdf',
+      created: 'Sep 18, 2026',
+      createdAge: '6 days ago',
+      updated: 'Sep 18, 2026',
+      updatedAge: '6 days ago',
+      status: 'Completed',
     },
-
     {
       id: 3,
       name: 'Oncology Coverage Policy',
-      description:
-        'Policy review for oncology services and treatments.',
-      fileName:
-        'Oncology_Policy_v2.pdf',
-      created:
-        'Sep 10, 2026',
-      createdAge:
-        '14 days ago',
-      updated:
-        'Sep 10, 2026',
-      updatedAge:
-        '14 days ago',
-      status:
-        'Completed',
+      description: 'Policy review for oncology services and treatments.',
+      fileName: 'Oncology_Policy_v2.pdf',
+      created: 'Sep 10, 2026',
+      createdAge: '14 days ago',
+      updated: 'Sep 10, 2026',
+      updatedAge: '14 days ago',
+      status: 'Completed',
     },
-
     {
       id: 4,
       name: 'Orthopedic Surgery Policy',
-      description:
-        'Policy review for orthopedic procedures and rehab.',
-      fileName:
-        'Ortho_Surgery_Policy_v5.pdf',
-      created:
-        'Sep 5, 2026',
-      createdAge:
-        '19 days ago',
-      updated:
-        'Sep 5, 2026',
-      updatedAge:
-        '19 days ago',
-      status:
-        'In Review',
+      description: 'Policy review for orthopedic procedures and rehab.',
+      fileName: 'Ortho_Surgery_Policy_v5.pdf',
+      created: 'Sep 5, 2026',
+      createdAge: '19 days ago',
+      updated: 'Sep 5, 2026',
+      updatedAge: '19 days ago',
+      status: 'In Review',
     },
-
     {
       id: 5,
       name: 'Mental Health Coverage Policy',
-      description:
-        'Policy review for mental health services and treatment.',
-      fileName:
-        'Mental_Health_Policy_v3.pdf',
-      created:
-        'Aug 28, 2026',
-      createdAge:
-        '27 days ago',
-      updated:
-        'Aug 28, 2026',
-      updatedAge:
-        '27 days ago',
-      status:
-        'Completed',
+      description: 'Policy review for mental health services and treatment.',
+      fileName: 'Mental_Health_Policy_v3.pdf',
+      created: 'Aug 28, 2026',
+      createdAge: '27 days ago',
+      updated: 'Aug 28, 2026',
+      updatedAge: '27 days ago',
+      status: 'Completed',
     },
   ]
 
   // ==========================================
-  // GET NEW POLICIES
+  // GET UPLOADED POLICIES
   // ==========================================
 
-  const savedPolicies =
-    JSON.parse(
-      localStorage.getItem('addedPolicies')
-    ) || []
+  const savedPolicies = getSavedArray('addedPolicies')
 
-  const addedPolicies =
-    savedPolicies.map((policy) => ({
-      ...policy,
-
-      created:
-        policy.created ||
-        policy.date,
-
-      createdAge:
-        policy.createdAge ||
-        policy.age ||
-        'Just now',
-
-      updated:
-        policy.updated ||
-        policy.date ||
-        policy.created,
-
-      updatedAge:
-        policy.updatedAge ||
-        policy.age ||
-        'Just now',
-
-      fileName:
-        policy.fileName ||
-        policy.name,
-    }))
+  const addedPolicies = savedPolicies.map((policy) => ({
+    ...policy,
+    created: policy.created || policy.date,
+    createdAge: policy.createdAge || policy.age || 'Just now',
+    updated: policy.updated || policy.date || policy.created,
+    updatedAge: policy.updatedAge || policy.age || 'Just now',
+    fileName: policy.fileName || policy.name,
+  }))
 
   // ==========================================
   // GET SAVED POLICY VERSIONS
   // ==========================================
 
-  const policyVersions =
-    JSON.parse(
-      localStorage.getItem('policyVersions')
-    ) || []
+  const policyVersions = getSavedArray('policyVersions')
 
   // ==========================================
   // COMBINE POLICIES
@@ -174,115 +124,144 @@ function PoliciesPage() {
     ...originalPolicies,
   ].filter(
     (policy) =>
-      !deletedPolicyIds.includes(policy.id)
+      !deletedPolicyIds.some(
+        (id) => String(id) === String(policy.id)
+      )
   )
 
   // ==========================================
   // APPLY EDITED VERSION INFORMATION
   // ==========================================
 
-  const allPolicies =
-    basePolicies.map((policy) => {
-      const matchingVersions =
-        policyVersions.filter(
-          (version) =>
-            version.originalPolicy ===
-              policy.fileName ||
-            version.originalPolicy ===
-              policy.name
-        )
+  const allPolicies = basePolicies.map((policy) => {
+    const matchingVersions = policyVersions.filter(
+      (version) =>
+        version.originalPolicy === policy.fileName ||
+        version.originalPolicy === policy.name
+    )
 
-      if (matchingVersions.length === 0) {
-        return {
-          ...policy,
-          versionCount: 0,
-        }
-      }
-
-      const newestVersion =
-        [...matchingVersions].sort(
-          (a, b) =>
-            new Date(b.createdAt) -
-            new Date(a.createdAt)
-        )[0]
-
-      const updatedDate =
-        new Date(
-          newestVersion.createdAt
-        ).toLocaleDateString(
-          'en-US',
-          {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          }
-        )
-
+    if (matchingVersions.length === 0) {
       return {
         ...policy,
-
-        updated:
-          updatedDate,
-
-        updatedAge:
-          'Just now',
-
-        versionCount:
-          matchingVersions.length,
-
-        latestVersion:
-          newestVersion,
+        versionCount: 0,
       }
+    }
+
+    const newestVersion = [...matchingVersions].sort(
+      (a, b) =>
+        new Date(b.createdAt) - new Date(a.createdAt)
+    )[0]
+
+    const updatedDate = new Date(
+      newestVersion.createdAt
+    ).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     })
 
+    return {
+      ...policy,
+      updated: updatedDate,
+      updatedAge: 'Just now',
+      versionCount: matchingVersions.length,
+      latestVersion: newestVersion,
+    }
+  })
+
   // ==========================================
-  // DELETE POLICY
+  // GUIDELINES FROM THE DATABASE
+  // ==========================================
+
+  const originalGuidelines = [
+    { id: 1, name: 'Cardiac Coverage Guideline' },
+    { id: 2, name: 'Diabetes Treatment Guideline' },
+    { id: 3, name: 'Oncology Coverage Guideline' },
+    { id: 4, name: 'Orthopedic Surgery Guideline' },
+    { id: 5, name: 'Mental Health Guideline' },
+  ]
+
+  const addedGuidelines = getSavedArray('addedGuidelines')
+  const deletedGuidelineIds = getSavedArray('deletedGuidelineIds')
+
+  const allGuidelines = [
+    ...addedGuidelines,
+    ...originalGuidelines,
+  ].filter(
+    (guideline) =>
+      !deletedGuidelineIds.some(
+        (id) => String(id) === String(guideline.id)
+      )
+  )
+
+  // ==========================================
+  // GET ASSOCIATED GUIDELINES
+  // ==========================================
+
+  function getAssociatedGuidelines(policy) {
+    return getGuidelinesForPolicy(
+      policy,
+      allGuidelines
+    )
+  }
+
+  // ==========================================
+  // DELETE POLICY + RECORD AUDIT EVENT
   // ==========================================
 
   function deletePolicy(id, name) {
-    const confirmed =
-      window.confirm(
-        `Are you sure you want to delete "${name}"?`
-      )
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${name}"?`
+    )
 
-    if (!confirmed) {
-      return
-    }
+    if (!confirmed) return
 
-    const savedPolicies =
-      JSON.parse(
-        localStorage.getItem(
-          'addedPolicies'
-        )
-      ) || []
+    // Remove from uploaded policies, if present.
+    const currentSavedPolicies =
+      getSavedArray('addedPolicies')
 
     const updatedSavedPolicies =
-      savedPolicies.filter(
+      currentSavedPolicies.filter(
         (policy) =>
-          policy.id !== id
+          String(policy.id) !== String(id)
       )
 
     localStorage.setItem(
       'addedPolicies',
-      JSON.stringify(
-        updatedSavedPolicies
-      )
+      JSON.stringify(updatedSavedPolicies)
     )
 
+    // Hide the policy from the database.
     const updatedDeletedIds = [
       ...deletedPolicyIds,
       id,
     ]
 
-    setDeletedPolicyIds(
-      updatedDeletedIds
-    )
+    setDeletedPolicyIds(updatedDeletedIds)
 
     localStorage.setItem(
       'deletedPolicyIds',
-      JSON.stringify(
-        updatedDeletedIds
-      )
+      JSON.stringify(updatedDeletedIds)
+    )
+
+    // Record deletion in the Audit Log.
+    const auditEvents = getSavedArray('auditEvents')
+
+    const auditEvent = {
+      id: `policy-delete-${Date.now()}-${id}`,
+      date: new Date().toISOString(),
+      user: 'Sarah Chen',
+      action: 'Policy Deleted',
+      category: 'Policy Changes',
+      item: name,
+      details: `Deleted policy "${name}" from the Policy Database.`,
+    }
+
+    auditEvents.push(auditEvent)
+
+    localStorage.setItem(
+      'auditEvents',
+      JSON.stringify(auditEvents)
     )
   }
 
@@ -290,45 +269,32 @@ function PoliciesPage() {
   // SEARCH + FILTER + SORT
   // ==========================================
 
-  const visiblePolicies =
-    allPolicies
-      .filter((policy) => {
-        const matchesSearch =
-          policy.name
-            .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            )
+  const visiblePolicies = allPolicies
+    .filter((policy) => {
+      const matchesSearch = policy.name
+        .toLowerCase()
+        .includes(search.toLowerCase())
 
-        const matchesFilter =
-          filter === 'All' ||
-          policy.status === filter
+      const matchesFilter =
+        filter === 'All' || policy.status === filter
 
-        return (
-          matchesSearch &&
-          matchesFilter
-        )
-      })
+      return matchesSearch && matchesFilter
+    })
+    .sort((a, b) => {
+      if (sort === 'Oldest') {
+        return new Date(a.created) - new Date(b.created)
+      }
 
-      .sort((a, b) => {
-        if (sort === 'Oldest') {
-          return (
-            new Date(a.created) -
-            new Date(b.created)
-          )
-        }
+      return new Date(b.created) - new Date(a.created)
+    })
 
-        return (
-          new Date(b.created) -
-          new Date(a.created)
-        )
-      })
+  // ==========================================
+  // PAGE
+  // ==========================================
 
   return (
     <div className="app-page">
-      {/* ======================================
-          TOP BAR
-      ====================================== */}
+      {/* TOP BAR */}
 
       <header className="top-bar">
         <div className="brand-area">
@@ -345,9 +311,7 @@ function PoliciesPage() {
 
         <div className="top-right">
           <div className="search-box">
-            <span>
-              ⌕
-            </span>
+            <span>⌕</span>
 
             <input
               type="text"
@@ -355,43 +319,25 @@ function PoliciesPage() {
             />
           </div>
 
-          <span className="top-icon">
-            ?
-          </span>
-
-          <span className="top-icon">
-            ⚙
-          </span>
+          <span className="top-icon">?</span>
+          <span className="top-icon">⚙</span>
 
           <div className="user-area">
-            <div className="user-avatar">
-              SC
-            </div>
-
-            <span>
-              Sarah Chen
-            </span>
+            <div className="user-avatar">SC</div>
+            <span>Sarah Chen</span>
           </div>
         </div>
       </header>
 
       <div className="app-body">
-        {/* ======================================
-            SIDEBAR
-        ====================================== */}
+        {/* SIDEBAR */}
 
         <aside className="sidebar">
-          <Link
-            to="/dashboard"
-            className="nav-item"
-          >
+          <Link to="/dashboard" className="nav-item">
             Dashboard
           </Link>
 
-          <Link
-            to="/reviews"
-            className="nav-item"
-          >
+          <Link to="/reviews" className="nav-item">
             Review Sessions
           </Link>
 
@@ -402,65 +348,48 @@ function PoliciesPage() {
             Policy Database
           </Link>
 
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
+          <Link to="/guidelines" className="nav-item">
             Guideline Database
+          </Link>
+
+          <Link to="/audit-log" className="nav-item">
+            Audit Log
           </Link>
         </aside>
 
-        {/* ======================================
-            MAIN PAGE
-        ====================================== */}
+        {/* MAIN PAGE */}
 
         <main className="policies-content">
-          <h1>
-            Policies
-          </h1>
+          <h1>Policies</h1>
 
           <p className="policies-subtitle">
-            View and manage your policies. Each entry contains a
-            guideline with a log of all versions of that policy over time.
+            View and manage your policies. Hover over
+            a policy name to see its associated guidelines.
           </p>
 
-          {/* ==================================
-              CONTROLS
-          ================================== */}
+          {/* CONTROLS */}
 
           <div className="policies-controls">
-            {/* SEARCH */}
-
             <div className="policies-search">
-              <span>
-                ⌕
-              </span>
+              <span>⌕</span>
 
               <input
                 type="text"
                 placeholder="Search policies..."
                 value={search}
                 onChange={(event) =>
-                  setSearch(
-                    event.target.value
-                  )
+                  setSearch(event.target.value)
                 }
               />
             </div>
-
-            {/* FILTER BUTTONS */}
 
             <div className="policies-filter-buttons">
               <button
                 type="button"
                 className={
-                  filter === 'All'
-                    ? 'active'
-                    : ''
+                  filter === 'All' ? 'active' : ''
                 }
-                onClick={() =>
-                  setFilter('All')
-                }
+                onClick={() => setFilter('All')}
               >
                 All
               </button>
@@ -468,14 +397,10 @@ function PoliciesPage() {
               <button
                 type="button"
                 className={
-                  filter === 'In Review'
-                    ? 'active'
-                    : ''
+                  filter === 'In Review' ? 'active' : ''
                 }
                 onClick={() =>
-                  setFilter(
-                    'In Review'
-                  )
+                  setFilter('In Review')
                 }
               >
                 In Review
@@ -484,92 +409,142 @@ function PoliciesPage() {
               <button
                 type="button"
                 className={
-                  filter === 'Completed'
-                    ? 'active'
-                    : ''
+                  filter === 'Completed' ? 'active' : ''
                 }
                 onClick={() =>
-                  setFilter(
-                    'Completed'
-                  )
+                  setFilter('Completed')
                 }
               >
                 Completed
               </button>
             </div>
 
-            {/* SORT */}
-
             <div className="policies-sort">
-              <span>
-                Sort by
-              </span>
+              <span>Sort by</span>
 
               <select
                 value={sort}
                 onChange={(event) =>
-                  setSort(
-                    event.target.value
-                  )
+                  setSort(event.target.value)
                 }
               >
-                <option>
-                  Most recent
-                </option>
-
-                <option>
-                  Oldest
-                </option>
+                <option>Most recent</option>
+                <option>Oldest</option>
               </select>
             </div>
           </div>
 
-          {/* ==================================
-              POLICY TABLE
-          ================================== */}
+          {/* POLICY TABLE */}
 
           <div className="policies-table">
-            {/* TABLE HEADER */}
-
             <div className="policies-table-header">
-              <div>
-                POLICY NAME
-              </div>
-
-              <div>
-                DATE CREATED
-              </div>
-
-              <div>
-                LAST UPDATED
-              </div>
-
-              <div>
-                STATUS
-              </div>
+              <div>POLICY NAME</div>
+              <div>DATE CREATED</div>
+              <div>LAST UPDATED</div>
+              <div>STATUS</div>
             </div>
 
-            {/* TABLE ROWS */}
+            {visiblePolicies.map((policy) => {
+              const associatedGuidelines =
+                getAssociatedGuidelines(policy)
 
-            {visiblePolicies.map(
-              (policy) => (
+              return (
                 <div
                   className="policies-table-row"
                   key={policy.id}
                 >
-                  {/* POLICY NAME */}
-
                   <div className="policy-name-cell">
-                    <Link
-                      to={`/policies/${policy.id}`}
-                      className="policy-name-link"
-                    >
-                      {policy.name}
-                    </Link>
+                    {/* POLICY NAME + HOVER PANEL */}
 
-                    <p>
-                      {policy.description}
-                    </p>
+                    <div
+                      style={{
+                        position: 'relative',
+                        display: 'inline-block',
+                        maxWidth: '100%',
+                      }}
+                      onMouseEnter={() =>
+                        setHoveredPolicyId(policy.id)
+                      }
+                      onMouseLeave={() =>
+                        setHoveredPolicyId(null)
+                      }
+                    >
+                      <Link
+                        to={`/policies/${policy.id}`}
+                        className="policy-name-link"
+                        aria-describedby={
+                          hoveredPolicyId === policy.id
+                            ? `guideline-tooltip-${policy.id}`
+                            : undefined
+                        }
+                      >
+                        {policy.name}
+                      </Link>
+
+                      {hoveredPolicyId === policy.id && (
+                        <div
+                          id={`guideline-tooltip-${policy.id}`}
+                          role="tooltip"
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            zIndex: 100,
+                            width: '290px',
+                            padding: '14px 16px',
+                            marginTop: '4px',
+                            background: '#ffffff',
+                            border:
+                              '1px solid #dbe3eb',
+                            borderRadius: '8px',
+                            boxShadow:
+                              '0 8px 24px rgba(0,0,0,0.14)',
+                            textAlign: 'left',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              color: '#475569',
+                              marginBottom: '10px',
+                            }}
+                          >
+                            ASSOCIATED GUIDELINES
+                          </div>
+
+                          {associatedGuidelines.length > 0 ? (
+                            associatedGuidelines.map(
+                              (guideline) => (
+                                <div
+                                  key={guideline.id}
+                                  style={{
+                                    padding: '7px 0',
+                                    fontSize: '13px',
+                                    color: '#0078bf',
+                                    borderBottom:
+                                      '1px solid #f1f5f9',
+                                  }}
+                                >
+                                  {guideline.name}
+                                </div>
+                              )
+                            )
+                          ) : (
+                            <div
+                              style={{
+                                fontSize: '13px',
+                                color: '#64748b',
+                              }}
+                            >
+                              No associated guidelines
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <p>{policy.description}</p>
 
                     {policy.versionCount > 0 && (
                       <small className="policy-version-note">
@@ -580,37 +555,20 @@ function PoliciesPage() {
                     )}
                   </div>
 
-                  {/* DATE CREATED */}
-
                   <div className="policy-date-cell">
-                    <span>
-                      {policy.created}
-                    </span>
-
-                    <small>
-                      {policy.createdAge}
-                    </small>
+                    <span>{policy.created}</span>
+                    <small>{policy.createdAge}</small>
                   </div>
 
-                  {/* LAST UPDATED */}
-
                   <div className="policy-date-cell">
-                    <span>
-                      {policy.updated}
-                    </span>
-
-                    <small>
-                      {policy.updatedAge}
-                    </small>
+                    <span>{policy.updated}</span>
+                    <small>{policy.updatedAge}</small>
                   </div>
-
-                  {/* STATUS + DELETE */}
 
                   <div className="policy-status-actions">
                     <span
                       className={
-                        policy.status ===
-                        'Completed'
+                        policy.status === 'Completed'
                           ? 'status completed'
                           : 'status in-review'
                       }
@@ -633,27 +591,20 @@ function PoliciesPage() {
                   </div>
                 </div>
               )
-            )}
+            })}
           </div>
 
-          {/* ==================================
-              NEW POLICY BUTTON
-          ================================== */}
+          {/* NEW POLICY BUTTON */}
 
           <button
             type="button"
             className="new-policy-button"
             onClick={() =>
-              navigate(
-                '/policies/new'
-              )
+              navigate('/policies/new')
             }
           >
             New Policy
-
-            <span>
-              ＋
-            </span>
+            <span>＋</span>
           </button>
         </main>
       </div>

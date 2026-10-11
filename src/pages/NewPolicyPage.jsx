@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -11,7 +12,6 @@ function NewPolicyPage() {
     size: '2.4 MB',
   })
 
-
   // Handles selecting a file from the computer
   function handleFileChange(event) {
     const file = event.target.files[0]
@@ -24,16 +24,13 @@ function NewPolicyPage() {
     }
   }
 
-
   // Removes the selected file
   function removeFile() {
     setSelectedFile(null)
   }
 
-
   // Runs when Upload Documents is clicked
   function uploadDocuments() {
-
     // Make sure the user entered a policy name
     if (policyName.trim() === '') {
       alert('Please enter a policy name.')
@@ -46,14 +43,12 @@ function NewPolicyPage() {
       return
     }
 
-
     // Get today's date
     const today = new Date().toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     })
-
 
     // Create the new policy
     const newPolicy = {
@@ -76,15 +71,12 @@ function NewPolicyPage() {
       fileName: selectedFile.name,
     }
 
-
     // Get policies that were previously added
     const savedPolicies =
       JSON.parse(localStorage.getItem('addedPolicies')) || []
 
-
     // Add the new policy
     savedPolicies.push(newPolicy)
-
 
     // Save the updated list
     localStorage.setItem(
@@ -92,23 +84,18 @@ function NewPolicyPage() {
       JSON.stringify(savedPolicies)
     )
 
-
     // Go back to the Policies page
     navigate('/policies')
   }
 
-
   return (
     <div className="app-page">
-
       {/* =========================
           TOP BAR
       ========================= */}
 
       <header className="top-bar">
-
         <div className="brand-area">
-
           <span className="brand-name">
             Policy Review
           </span>
@@ -118,23 +105,17 @@ function NewPolicyPage() {
           <span className="workspace-name">
             Policy Review Workspace
           </span>
-
         </div>
 
-
         <div className="top-right">
-
           <div className="search-box">
-
             <span>⌕</span>
 
             <input
               type="text"
               placeholder="Search policies, codes..."
             />
-
           </div>
-
 
           <span className="top-icon">
             ?
@@ -144,9 +125,7 @@ function NewPolicyPage() {
             ⚙
           </span>
 
-
           <div className="user-area">
-
             <div className="user-avatar">
               SC
             </div>
@@ -154,80 +133,57 @@ function NewPolicyPage() {
             <span>
               Sarah Chen
             </span>
-
           </div>
-
         </div>
-
       </header>
 
-
       <div className="app-body">
-
-
         {/* =========================
-            SIDEBAR
+            UPDATED SIDEBAR
         ========================= */}
 
         <aside className="sidebar">
-
           <Link
             to="/dashboard"
             className="nav-item"
           >
-            <span className="nav-icon">
-              ▦
-            </span>
-
             Dashboard
           </Link>
-
 
           <Link
             to="/reviews"
             className="nav-item"
           >
-            <span className="nav-icon">
-              ▣
-            </span>
-
-            Policy Reviews
+            Review Sessions
           </Link>
-
-
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
-            Guidelines
-          </Link>
-
 
           <Link
             to="/policies"
             className="nav-item active"
           >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
-            Policies
+            Policy Database
           </Link>
 
-        </aside>
+          <Link
+            to="/guidelines"
+            className="nav-item"
+          >
+            Guideline Database
+          </Link>
 
+          <Link
+            to="/audit-log"
+            className="nav-item"
+          >
+            Audit Log
+          </Link>
+        </aside>
 
         {/* =========================
             MAIN CONTENT
         ========================= */}
 
         <main className="new-policy-content">
-
-
           {/* Back button */}
 
           <Link
@@ -237,33 +193,26 @@ function NewPolicyPage() {
             ← Back to Policies
           </Link>
 
-
           <h1>
             New Policy
           </h1>
 
-
           <p className="new-policy-subtitle">
             Upload new policies
           </p>
-
-
 
           {/* =========================
               POLICY INFORMATION
           ========================= */}
 
           <section className="new-policy-card">
-
             <h2>
               Policy Information
             </h2>
 
-
             <label className="new-policy-label">
               Policy Name
             </label>
-
 
             <input
               className="new-policy-name-input"
@@ -274,29 +223,22 @@ function NewPolicyPage() {
                 setPolicyName(event.target.value)
               }
             />
-
           </section>
-
-
 
           {/* =========================
               POLICY DOCUMENT
           ========================= */}
 
           <section className="new-policy-card policy-upload-card">
-
             <h2>
               Policy Document(s)
             </h2>
-
 
             <p>
               Upload or select the policy documents you want to review.
             </p>
 
-
             <label className="new-policy-upload-area">
-
               <input
                 type="file"
                 accept=".pdf,.doc,.docx"
@@ -304,14 +246,11 @@ function NewPolicyPage() {
                 onChange={handleFileChange}
               />
 
-
               <div className="new-policy-upload-icon">
                 ⇧
               </div>
 
-
               <div>
-
                 <strong>
                   Click to upload
                 </strong>
@@ -321,25 +260,17 @@ function NewPolicyPage() {
                   or drag and drop a PDF or DOCX file here,
                   or browse your computer.
                 </span>
-
               </div>
-
             </label>
-
           </section>
-
-
 
           {/* =========================
               SELECTED FILE
           ========================= */}
 
           {selectedFile && (
-
             <div className="new-policy-selected-file">
-
               <div>
-
                 <strong>
                   {selectedFile.name}
                 </strong>
@@ -347,9 +278,7 @@ function NewPolicyPage() {
                 <small>
                   PDF • {selectedFile.size}
                 </small>
-
               </div>
-
 
               <button
                 type="button"
@@ -357,20 +286,14 @@ function NewPolicyPage() {
               >
                 Remove
               </button>
-
             </div>
-
           )}
-
-
 
           {/* =========================
               BOTTOM BUTTONS
           ========================= */}
 
           <div className="new-policy-actions">
-
-
             <button
               type="button"
               className="cancel-policy-button"
@@ -381,7 +304,6 @@ function NewPolicyPage() {
               Cancel
             </button>
 
-
             <button
               type="button"
               className="upload-policy-button"
@@ -389,14 +311,9 @@ function NewPolicyPage() {
             >
               Upload Documents
             </button>
-
-
           </div>
-
         </main>
-
       </div>
-
     </div>
   )
 }

@@ -1,8 +1,25 @@
+
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import {
+  getGuidelinesForPolicies,
+} from '../data/guidelineMappings'
 
 function NewPolicyReviewPage() {
   const navigate = useNavigate()
+
+  // ==========================================
+  // READ SAVED DATA SAFELY
+  // ==========================================
+
+  function getSavedArray(key) {
+    try {
+      const data = JSON.parse(localStorage.getItem(key))
+      return Array.isArray(data) ? data : []
+    } catch {
+      return []
+    }
+  }
 
   // ==========================================
   // REVIEW SESSION INFORMATION
@@ -17,18 +34,106 @@ function NewPolicyReviewPage() {
   })
 
   // ==========================================
+  // ORIGINAL POLICY DATABASE
+  // ==========================================
+
+  const originalPolicies = [
+    { id: 1, name: 'Cardiac Coverage Policy' },
+    { id: 2, name: 'Diabetes Treatment Policy' },
+    { id: 3, name: 'Oncology Coverage Policy' },
+    { id: 4, name: 'Orthopedic Surgery Policy' },
+    { id: 5, name: 'Mental Health Coverage Policy' },
+  ]
+
+  const addedPolicies = getSavedArray('addedPolicies')
+  const deletedPolicyIds = getSavedArray('deletedPolicyIds')
+
+  const databasePolicies = [
+    ...addedPolicies,
+    ...originalPolicies,
+  ].filter(
+    (policy) =>
+      !deletedPolicyIds.some(
+        (id) => String(id) === String(policy.id)
+      )
+  )
+
+  // ==========================================
   // SELECTED POLICIES
   // ==========================================
 
   const [selectedPolicies, setSelectedPolicies] = useState(() => {
-    const saved = localStorage.getItem('selectedPolicies')
+    const savedPolicies = getSavedArray('selectedPolicies')
 
-    if (saved) {
-      return JSON.parse(saved)
-    }
-
-    return []
+    return savedPolicies.filter((selectedPolicy) =>
+      databasePolicies.some(
+        (policy) =>
+          String(policy.id) === String(selectedPolicy.id)
+      )
+    )
   })
+
+  // ==========================================
+  // ORIGINAL GUIDELINES
+  // ==========================================
+
+  // Policy mappings are no longer defined here.
+  // They are supplied by guidelineMappings.js.
+
+  const originalGuidelines = [
+    {
+      id: 1,
+      name: 'Cardiac Coverage Guideline',
+      description:
+        'Clinical guidance for cardiac procedures, diagnostic testing, and treatment.',
+    },
+    {
+      id: 2,
+      name: 'Diabetes Treatment Guideline',
+      description:
+        'Clinical guidance for diabetes management, medications, and treatment.',
+    },
+    {
+      id: 3,
+      name: 'Oncology Coverage Guideline',
+      description:
+        'Clinical guidance for oncology services, testing, and treatments.',
+    },
+    {
+      id: 4,
+      name: 'Orthopedic Surgery Guideline',
+      description:
+        'Clinical guidance for orthopedic procedures and rehabilitation.',
+    },
+    {
+      id: 5,
+      name: 'Mental Health Guideline',
+      description:
+        'Clinical guidance for mental health services and treatment.',
+    },
+  ]
+
+  const addedGuidelines = getSavedArray('addedGuidelines')
+  const deletedGuidelineIds = getSavedArray('deletedGuidelineIds')
+
+  const allGuidelines = [
+    ...addedGuidelines,
+    ...originalGuidelines,
+  ].filter(
+    (guideline) =>
+      !deletedGuidelineIds.some(
+        (id) => String(id) === String(guideline.id)
+      )
+  )
+
+  // ==========================================
+  // AUTOMATIC GUIDELINE MATCHING
+  // ==========================================
+
+  const associatedGuidelines = getGuidelinesForPolicies(
+    selectedPolicies,
+    allGuidelines
+  )
 
   // ==========================================
   // REMOVE POLICY
@@ -36,7 +141,7 @@ function NewPolicyReviewPage() {
 
   function removePolicy(id) {
     const updatedPolicies = selectedPolicies.filter(
-      (policy) => policy.id !== id
+      (policy) => String(policy.id) !== String(id)
     )
 
     setSelectedPolicies(updatedPolicies)
@@ -45,46 +150,13 @@ function NewPolicyReviewPage() {
       'selectedPolicies',
       JSON.stringify(updatedPolicies)
     )
+
+    // Old guideline selections are no longer valid.
+    localStorage.removeItem('selectedGuidelines')
   }
 
   // ==========================================
-  // FILE UPLOAD
-  // ==========================================
-
-  function handleFileUpload(event) {
-    const file = event.target.files[0]
-
-    if (!file) {
-      return
-    }
-
-    const uploadedPolicy = {
-      id: Date.now(),
-      name: file.name,
-      description: 'Uploaded policy document',
-      fileName: file.name,
-      size: `${(
-        file.size /
-        1024 /
-        1024
-      ).toFixed(1)} MB`,
-    }
-
-    const updatedPolicies = [
-      ...selectedPolicies,
-      uploadedPolicy,
-    ]
-
-    setSelectedPolicies(updatedPolicies)
-
-    localStorage.setItem(
-      'selectedPolicies',
-      JSON.stringify(updatedPolicies)
-    )
-  }
-
-  // ==========================================
-  // CONTINUE TO GUIDELINES
+  // CONTINUE TO REFERENCE GUIDELINES
   // ==========================================
 
   function continueToGuidelines() {
@@ -98,14 +170,45 @@ function NewPolicyReviewPage() {
       return
     }
 
-    if (selectedPolicies.length === 0) {
-      alert('Please select at least one policy.')
+    // Recheck policies against the current database.
+    const currentAddedPolicies =
+      getSavedArray('addedPolicies')
+
+    const currentDeletedPolicyIds =
+      getSavedArray('deletedPolicyIds')
+
+    const currentDatabasePolicies = [
+      ...currentAddedPolicies,
+      ...originalPolicies,
+    ].filter(
+      (policy) =>
+        !currentDeletedPolicyIds.some(
+          (id) => String(id) === String(policy.id)
+        )
+    )
+
+    const validSelectedPolicies =
+      currentDatabasePolicies.filter((policy) =>
+        selectedPolicies.some(
+          (selectedPolicy) =>
+            String(selectedPolicy.id) === String(policy.id)
+        )
+      )
+
+    if (validSelectedPolicies.length === 0) {
+      alert(
+        'Please select at least one policy from the Policy Database.'
+      )
       return
     }
 
-    // Save session information so it is available
-    // on the next page of the workflow.
+    // Use the shared mapping function.
+    const mappedGuidelines = getGuidelinesForPolicies(
+      validSelectedPolicies,
+      allGuidelines
+    )
 
+    // Save session information.
     localStorage.setItem(
       'newReviewName',
       reviewName.trim()
@@ -118,23 +221,29 @@ function NewPolicyReviewPage() {
 
     localStorage.setItem(
       'selectedPolicies',
-      JSON.stringify(selectedPolicies)
+      JSON.stringify(validSelectedPolicies)
     )
 
-    // Clear guidelines from a previous session so
-    // a new review starts with a clean selection.
+    localStorage.setItem(
+      'selectedGuidelines',
+      JSON.stringify(mappedGuidelines)
+    )
 
-    localStorage.removeItem('selectedGuidelines')
-    localStorage.setItem('guidelineMode', 'manual')
+    localStorage.setItem(
+      'guidelineMode',
+      'automatic'
+    )
 
     navigate('/reviews/new/select-guidelines')
   }
 
+  // ==========================================
+  // PAGE
+  // ==========================================
+
   return (
     <div className="app-page">
-      {/* ======================================
-          TOP HEADER
-      ====================================== */}
+      {/* TOP HEADER */}
 
       <header className="top-bar">
         <div className="brand-area">
@@ -151,9 +260,7 @@ function NewPolicyReviewPage() {
 
         <div className="top-right">
           <div className="search-box">
-            <span>
-              ⌕
-            </span>
+            <span>⌕</span>
 
             <input
               type="text"
@@ -161,40 +268,21 @@ function NewPolicyReviewPage() {
             />
           </div>
 
-          <span className="top-icon">
-            ?
-          </span>
-
-          <span className="top-icon">
-            ⚙
-          </span>
+          <span className="top-icon">?</span>
+          <span className="top-icon">⚙</span>
 
           <div className="user-area">
-            <div className="user-avatar">
-              SC
-            </div>
-
-            <span>
-              Sarah Chen
-            </span>
+            <div className="user-avatar">SC</div>
+            <span>Sarah Chen</span>
           </div>
         </div>
       </header>
 
       <div className="app-body">
-        {/* ======================================
-            SIDEBAR
-        ====================================== */}
+        {/* SIDEBAR */}
 
         <aside className="sidebar">
-          <Link
-            to="/dashboard"
-            className="nav-item"
-          >
-            <span className="nav-icon">
-              ▦
-            </span>
-
+          <Link to="/dashboard" className="nav-item">
             Dashboard
           </Link>
 
@@ -202,70 +290,42 @@ function NewPolicyReviewPage() {
             to="/reviews"
             className="nav-item active"
           >
-            <span className="nav-icon">
-              ▣
-            </span>
-
             Review Sessions
           </Link>
 
-          <Link
-            to="/policies"
-            className="nav-item"
-          >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
+          <Link to="/policies" className="nav-item">
             Policy Database
           </Link>
 
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
+          <Link to="/guidelines" className="nav-item">
             Guideline Database
+          </Link>
+
+          <Link to="/audit-log" className="nav-item">
+            Audit Log
           </Link>
         </aside>
 
-        {/* ======================================
-            PAGE CONTENT
-        ====================================== */}
+        {/* PAGE CONTENT */}
 
         <main className="new-review-content">
-          <Link
-            to="/reviews"
-            className="back-link"
-          >
+          <Link to="/reviews" className="back-link">
             ← Back to Review Sessions
           </Link>
 
-          {/* ==================================
-              PAGE HEADER
-          ================================== */}
+          {/* PAGE HEADER */}
 
-          <div
-            style={{
-              marginBottom: '26px',
-            }}
-          >
-            <h1>
-              Start a Review Session
-            </h1>
+          <div style={{ marginBottom: '26px' }}>
+            <h1>Start a Review Session</h1>
 
             <p className="new-review-subtitle">
-              Create a review session and choose the policies
-              that should be evaluated.
+              Create a review session and select existing
+              policies from the Policy Database. Their
+              associated guidelines will be added automatically.
             </p>
           </div>
 
-          {/* ==================================
-              WORKFLOW STEPS
-          ================================== */}
+          {/* WORKFLOW STEPS */}
 
           <div
             style={{
@@ -274,6 +334,7 @@ function NewPolicyReviewPage() {
               gap: '10px',
               marginBottom: '28px',
               fontSize: '13px',
+              flexWrap: 'wrap',
             }}
           >
             <span
@@ -292,17 +353,9 @@ function NewPolicyReviewPage() {
               1
             </span>
 
-            <strong>
-              Session Details
-            </strong>
+            <strong>Session Details</strong>
 
-            <span
-              style={{
-                color: '#aaa',
-              }}
-            >
-              →
-            </span>
+            <span style={{ color: '#aaa' }}>→</span>
 
             <span
               style={{
@@ -320,21 +373,11 @@ function NewPolicyReviewPage() {
               2
             </span>
 
-            <span
-              style={{
-                color: '#777',
-              }}
-            >
+            <span style={{ color: '#777' }}>
               Reference Guidelines
             </span>
 
-            <span
-              style={{
-                color: '#aaa',
-              }}
-            >
-              →
-            </span>
+            <span style={{ color: '#aaa' }}>→</span>
 
             <span
               style={{
@@ -352,23 +395,15 @@ function NewPolicyReviewPage() {
               3
             </span>
 
-            <span
-              style={{
-                color: '#777',
-              }}
-            >
+            <span style={{ color: '#777' }}>
               Start Review
             </span>
           </div>
 
-          {/* ==================================
-              SESSION INFORMATION
-          ================================== */}
+          {/* SESSION INFORMATION */}
 
           <section className="new-review-card">
-            <h2>
-              Review Session Details
-            </h2>
+            <h2>Review Session Details</h2>
 
             <p
               style={{
@@ -431,9 +466,7 @@ function NewPolicyReviewPage() {
             />
           </section>
 
-          {/* ==================================
-              POLICY SELECTION
-          ================================== */}
+          {/* POLICY SELECTION */}
 
           <section className="new-review-card policy-document-section">
             <div
@@ -445,13 +478,11 @@ function NewPolicyReviewPage() {
               }}
             >
               <div>
-                <h2>
-                  Policies in this Review Session
-                </h2>
+                <h2>Policies in this Review Session</h2>
 
                 <p>
-                  Select one or more policies from the Policy
-                  Database to include in this review.
+                  Select one or more existing policies from
+                  the Policy Database to include in this review.
                 </p>
               </div>
 
@@ -475,9 +506,7 @@ function NewPolicyReviewPage() {
               )}
             </div>
 
-            {/* ==================================
-                SELECT FROM POLICY DATABASE
-            ================================== */}
+            {/* SELECT FROM POLICY DATABASE */}
 
             <div
               style={{
@@ -489,18 +518,14 @@ function NewPolicyReviewPage() {
                 type="button"
                 className="outline-action-button"
                 onClick={() =>
-                  navigate(
-                    '/reviews/new/select-policies'
-                  )
+                  navigate('/reviews/new/select-policies')
                 }
               >
                 Select from Policy Database
               </button>
             </div>
 
-            {/* ==================================
-                SELECTED POLICIES
-            ================================== */}
+            {/* SELECTED POLICIES */}
 
             {selectedPolicies.length > 0 ? (
               <div className="selected-policies-list">
@@ -511,8 +536,7 @@ function NewPolicyReviewPage() {
                   >
                     <div>
                       <strong>
-                        {policy.name ||
-                          policy.fileName}
+                        {policy.name || policy.fileName}
                       </strong>
 
                       <small>
@@ -547,64 +571,90 @@ function NewPolicyReviewPage() {
               </div>
             )}
 
-            {/* ==================================
-                OPTIONAL UPLOAD
-            ================================== */}
+            {/* DATABASE-ONLY NOTICE */}
 
-            <div
+            <p
               style={{
-                marginTop: '22px',
-                paddingTop: '20px',
+                marginTop: '20px',
+                paddingTop: '16px',
                 borderTop: '1px solid #e2e2e2',
+                fontSize: '13px',
+                color: '#64748b',
               }}
             >
-              <p
-                style={{
-                  marginBottom: '12px',
-                  fontSize: '13px',
-                  color: '#666',
-                }}
-              >
-                Or upload a policy document directly.
-              </p>
-
-              <label className="upload-area">
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  hidden
-                  onChange={handleFileUpload}
-                />
-
-                <div className="upload-icon">
-                  ⇧
-                </div>
-
-                <div>
-                  <strong>
-                    Upload policy document
-                  </strong>
-
-                  <span>
-                    {' '}
-                    PDF or DOCX
-                  </span>
-                </div>
-              </label>
-            </div>
+              Policies must be uploaded to the Policy Database
+              before they can be included in a review session.
+            </p>
           </section>
 
-          {/* ==================================
-              BOTTOM ACTIONS
-          ================================== */}
+          {/* AUTOMATIC GUIDELINE PREVIEW */}
+
+          {selectedPolicies.length > 0 && (
+            <section className="new-review-card">
+              <h2>Automatically Associated Guidelines</h2>
+
+              <p
+                style={{
+                  color: '#666',
+                  marginTop: '4px',
+                  marginBottom: '18px',
+                }}
+              >
+                These guidelines are already mapped to your
+                selected policies. They will be used
+                automatically during the review.
+              </p>
+
+              {associatedGuidelines.length > 0 ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
+                  {associatedGuidelines.map((guideline) => (
+                    <div
+                      key={guideline.id}
+                      style={{
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '7px',
+                        padding: '12px 16px',
+                        background: '#f8fafc',
+                      }}
+                    >
+                      <strong
+                        style={{
+                          fontSize: '14px',
+                          color: '#334155',
+                        }}
+                      >
+                        {guideline.name}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p
+                  style={{
+                    fontSize: '13px',
+                    color: '#64748b',
+                  }}
+                >
+                  No guidelines are currently mapped to
+                  these policies.
+                </p>
+              )}
+            </section>
+          )}
+
+          {/* BOTTOM ACTIONS */}
 
           <div className="new-review-actions">
             <button
               type="button"
               className="cancel-review-button"
-              onClick={() =>
-                navigate('/reviews')
-              }
+              onClick={() => navigate('/reviews')}
             >
               Cancel
             </button>

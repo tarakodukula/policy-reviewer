@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom'
 
 function DashboardPage() {
@@ -185,6 +186,13 @@ function DashboardPage() {
             className="nav-item"
           >
             Guideline Database
+          </Link>
+
+          <Link
+            to="/audit-log"
+            className="nav-item"
+          >
+            Audit Log
           </Link>
         </aside>
 

@@ -1,20 +1,15 @@
+
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 function PolicyReviewPage() {
   const navigate = useNavigate()
 
-  // ==========================================
-  // SEARCH / FILTER / SORT
-  // ==========================================
-
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
 
-  // ==========================================
   // ORIGINAL / DEMO REVIEW SESSIONS
-  // ==========================================
 
   const originalReviews = [
     {
@@ -28,22 +23,11 @@ function PolicyReviewPage() {
       age: '2 days ago',
       status: 'In Review',
       findings: 14,
-
       selectedPolicies: [
-        {
-          id: 'demo-cardiac-1',
-          name: 'Cardiac Coverage Policy',
-        },
-        {
-          id: 'demo-cardiac-2',
-          name: 'Coronary Intervention Policy',
-        },
-        {
-          id: 'demo-cardiac-3',
-          name: 'Cardiac Imaging Policy',
-        },
+        { id: 'demo-cardiac-1', name: 'Cardiac Coverage Policy' },
+        { id: 'demo-cardiac-2', name: 'Coronary Intervention Policy' },
+        { id: 'demo-cardiac-3', name: 'Cardiac Imaging Policy' },
       ],
-
       selectedGuidelines: [
         {
           id: 'demo-cardiac-guideline',
@@ -51,7 +35,6 @@ function PolicyReviewPage() {
         },
       ],
     },
-
     {
       id: 2,
       name: 'Diabetes Treatment Review',
@@ -63,18 +46,13 @@ function PolicyReviewPage() {
       age: '6 days ago',
       status: 'Completed',
       findings: 8,
-
       selectedPolicies: [
-        {
-          id: 'demo-diabetes-1',
-          name: 'Diabetes Treatment Policy',
-        },
+        { id: 'demo-diabetes-1', name: 'Diabetes Treatment Policy' },
         {
           id: 'demo-diabetes-2',
           name: 'Diabetes Medication Coverage Policy',
         },
       ],
-
       selectedGuidelines: [
         {
           id: 'demo-diabetes-guideline',
@@ -82,7 +60,6 @@ function PolicyReviewPage() {
         },
       ],
     },
-
     {
       id: 3,
       name: 'Oncology Coverage Review',
@@ -94,26 +71,12 @@ function PolicyReviewPage() {
       age: '14 days ago',
       status: 'Completed',
       findings: 21,
-
       selectedPolicies: [
-        {
-          id: 'demo-oncology-1',
-          name: 'Oncology Coverage Policy',
-        },
-        {
-          id: 'demo-oncology-2',
-          name: 'Targeted Therapy Policy',
-        },
-        {
-          id: 'demo-oncology-3',
-          name: 'Cancer Treatment Policy',
-        },
-        {
-          id: 'demo-oncology-4',
-          name: 'Oncology Medication Policy',
-        },
+        { id: 'demo-oncology-1', name: 'Oncology Coverage Policy' },
+        { id: 'demo-oncology-2', name: 'Targeted Therapy Policy' },
+        { id: 'demo-oncology-3', name: 'Cancer Treatment Policy' },
+        { id: 'demo-oncology-4', name: 'Oncology Medication Policy' },
       ],
-
       selectedGuidelines: [
         {
           id: 'demo-oncology-guideline',
@@ -121,7 +84,6 @@ function PolicyReviewPage() {
         },
       ],
     },
-
     {
       id: 4,
       name: 'Orthopedic Surgery Review',
@@ -133,22 +95,14 @@ function PolicyReviewPage() {
       age: '19 days ago',
       status: 'In Review',
       findings: 0,
-
       selectedPolicies: [
-        {
-          id: 'demo-orthopedic-1',
-          name: 'Orthopedic Surgery Policy',
-        },
-        {
-          id: 'demo-orthopedic-2',
-          name: 'Joint Replacement Policy',
-        },
+        { id: 'demo-orthopedic-1', name: 'Orthopedic Surgery Policy' },
+        { id: 'demo-orthopedic-2', name: 'Joint Replacement Policy' },
         {
           id: 'demo-orthopedic-3',
           name: 'Rehabilitation Coverage Policy',
         },
       ],
-
       selectedGuidelines: [
         {
           id: 'demo-orthopedic-guideline',
@@ -156,7 +110,6 @@ function PolicyReviewPage() {
         },
       ],
     },
-
     {
       id: 5,
       name: 'Mental Health Coverage Review',
@@ -168,7 +121,6 @@ function PolicyReviewPage() {
       age: '27 days ago',
       status: 'Completed',
       findings: 12,
-
       selectedPolicies: [
         {
           id: 'demo-mental-health-1',
@@ -179,7 +131,6 @@ function PolicyReviewPage() {
           name: 'Behavioral Health Treatment Policy',
         },
       ],
-
       selectedGuidelines: [
         {
           id: 'demo-mental-health-guideline',
@@ -189,142 +140,80 @@ function PolicyReviewPage() {
     },
   ]
 
-  // ==========================================
   // GET REVIEW SESSIONS CREATED BY USER
-  // ==========================================
 
   const savedReviews =
-    JSON.parse(
-      localStorage.getItem('createdReviews')
-    ) || []
+    JSON.parse(localStorage.getItem('createdReviews')) || []
 
-  const createdReviews = savedReviews.map(
-    (review) => ({
-      ...review,
+  const createdReviews = savedReviews.map((review) => ({
+    ...review,
+    policies:
+      typeof review.policies === 'number'
+        ? review.policies
+        : review.selectedPolicies?.length || 1,
+    guideline:
+      review.guideline ||
+      review.selectedGuidelines?.[0]?.name ||
+      'Reference guidelines selected',
+    status: review.status || 'In Review',
+    findings: review.findings ?? 0,
+    age: review.age || 'Recently',
+  }))
 
-      policies:
-        typeof review.policies === 'number'
-          ? review.policies
-          : review.selectedPolicies?.length || 1,
+  const allReviews = [...createdReviews, ...originalReviews]
 
-      guideline:
-        review.guideline ||
-        review.selectedGuidelines?.[0]?.name ||
-        'Reference guidelines selected',
+  const activeCount = allReviews.filter(
+    (review) => review.status === 'In Review'
+  ).length
 
-      status:
-        review.status ||
-        'In Review',
+  const completedCount = allReviews.filter(
+    (review) => review.status === 'Completed'
+  ).length
 
-      findings:
-        review.findings ?? 0,
-
-      age:
-        review.age ||
-        'Recently',
-    })
+  const totalFindings = allReviews.reduce(
+    (total, review) => total + Number(review.findings || 0),
+    0
   )
 
-  // ==========================================
-  // COMBINE REVIEW SESSIONS
-  // ==========================================
-
-  const allReviews = [
-    ...createdReviews,
-    ...originalReviews,
-  ]
-
-  // ==========================================
-  // COUNTS
-  // ==========================================
-
-  const activeCount =
-    allReviews.filter(
-      (review) =>
-        review.status === 'In Review'
-    ).length
-
-  const completedCount =
-    allReviews.filter(
-      (review) =>
-        review.status === 'Completed'
-    ).length
-
-  const totalFindings =
-    allReviews.reduce(
-      (total, review) =>
-        total +
-        Number(review.findings || 0),
-      0
-    )
-
-  // ==========================================
-  // SEARCH + FILTER + SORT
-  // ==========================================
+  // SEARCH / FILTER / SORT
 
   const visibleReviews = [...allReviews]
     .filter((review) => {
-      const reviewName =
-        review.name ||
-        'Untitled Review Session'
+      const reviewName = review.name || 'Untitled Review Session'
 
-      const matchesSearch =
-        reviewName
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          )
+      const matchesSearch = reviewName
+        .toLowerCase()
+        .includes(search.toLowerCase())
 
       const matchesFilter =
-        filter === 'All' ||
-        review.status === filter
+        filter === 'All' || review.status === filter
 
-      return (
-        matchesSearch &&
-        matchesFilter
-      )
+      return matchesSearch && matchesFilter
     })
     .sort((a, b) => {
-      const aDate =
-        new Date(a.date)
+      const aDate = new Date(a.date)
+      const bDate = new Date(b.date)
 
-      const bDate =
-        new Date(b.date)
+      const aTime = Number.isNaN(aDate.getTime())
+        ? 0
+        : aDate.getTime()
 
-      const aTime =
-        Number.isNaN(
-          aDate.getTime()
-        )
-          ? 0
-          : aDate.getTime()
+      const bTime = Number.isNaN(bDate.getTime())
+        ? 0
+        : bDate.getTime()
 
-      const bTime =
-        Number.isNaN(
-          bDate.getTime()
-        )
-          ? 0
-          : bDate.getTime()
-
-      if (sort === 'Oldest') {
-        return aTime - bTime
-      }
-
-      return bTime - aTime
+      return sort === 'Oldest'
+        ? aTime - bTime
+        : bTime - aTime
     })
 
-  // ==========================================
   // OPEN EXISTING REVIEW SESSION
-  // ==========================================
 
   function openReviewSession(review) {
     const sessionToOpen = {
       ...review,
-
-      selectedPolicies:
-        review.selectedPolicies || [],
-
-      selectedGuidelines:
-        review.selectedGuidelines || [],
+      selectedPolicies: review.selectedPolicies || [],
+      selectedGuidelines: review.selectedGuidelines || [],
     }
 
     localStorage.setItem(
@@ -334,16 +223,12 @@ function PolicyReviewPage() {
 
     localStorage.setItem(
       'selectedPolicies',
-      JSON.stringify(
-        sessionToOpen.selectedPolicies
-      )
+      JSON.stringify(sessionToOpen.selectedPolicies)
     )
 
     localStorage.setItem(
       'selectedGuidelines',
-      JSON.stringify(
-        sessionToOpen.selectedGuidelines
-      )
+      JSON.stringify(sessionToOpen.selectedGuidelines)
     )
 
     localStorage.setItem(
@@ -359,24 +244,12 @@ function PolicyReviewPage() {
     navigate('/reviews/findings')
   }
 
-  // ==========================================
-  // PAGE
-  // ==========================================
-
   return (
     <div className="app-page">
-      {/* ======================================
-          TOP BAR
-      ====================================== */}
-
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">
-            Policy Review
-          </span>
-
+          <span className="brand-name">Policy Review</span>
           <span className="brand-divider"></span>
-
           <span className="workspace-name">
             Policy Review Workspace
           </span>
@@ -385,105 +258,67 @@ function PolicyReviewPage() {
         <div className="top-right">
           <div className="search-box">
             <span>⌕</span>
-
             <input
               type="text"
               placeholder="Search policies, guidelines..."
             />
           </div>
-
-          <span className="top-icon">
-            ?
-          </span>
-
-          <span className="top-icon">
-            ⚙
-          </span>
-
+          <span className="top-icon">?</span>
+          <span className="top-icon">⚙</span>
           <div className="user-area">
-            <div className="user-avatar">
-              SC
-            </div>
-
-            <span>
-              Sarah Chen
-            </span>
+            <div className="user-avatar">SC</div>
+            <span>Sarah Chen</span>
           </div>
         </div>
       </header>
 
       <div className="app-body">
-        {/* ======================================
-            SIDEBAR
-        ====================================== */}
+        {/* SIDEBAR */}
 
         <aside className="sidebar">
-          <Link
-            to="/dashboard"
-            className="nav-item"
-          >
+          <Link to="/dashboard" className="nav-item">
             Dashboard
           </Link>
 
-          <Link
-            to="/reviews"
-            className="nav-item active"
-          >
+          <Link to="/reviews" className="nav-item active">
             Review Sessions
           </Link>
 
-          <Link
-            to="/policies"
-            className="nav-item"
-          >
+          <Link to="/policies" className="nav-item">
             Policy Database
           </Link>
 
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
+          <Link to="/guidelines" className="nav-item">
             Guideline Database
+          </Link>
+
+          <Link to="/audit-log" className="nav-item">
+            Audit Log
           </Link>
         </aside>
 
-        {/* ======================================
-            MAIN PAGE
-        ====================================== */}
+        {/* MAIN PAGE */}
 
         <main className="policy-reviews-content">
-          {/* ==================================
-              PAGE HEADER
-          ================================== */}
-
           <div
             style={{
               display: 'flex',
-              justifyContent:
-                'space-between',
-              alignItems:
-                'flex-start',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
               gap: '24px',
               marginBottom: '28px',
             }}
           >
             <div>
-              <h1
-                style={{
-                  marginBottom: '8px',
-                }}
-              >
+              <h1 style={{ marginBottom: '8px' }}>
                 Review Sessions
               </h1>
 
               <p
                 className="page-subtitle"
-                style={{
-                  marginBottom: 0,
-                }}
+                style={{ marginBottom: 0 }}
               >
-                Create, continue, and
-                monitor policy review
+                Create, continue, and monitor policy review
                 sessions.
               </p>
             </div>
@@ -498,14 +333,11 @@ function PolicyReviewPage() {
               }}
             >
               Start a Review Session
-
               <span>+</span>
             </Link>
           </div>
 
-          {/* ==================================
-              SESSION SUMMARY
-          ================================== */}
+          {/* SESSION SUMMARY */}
 
           <div
             style={{
@@ -517,39 +349,22 @@ function PolicyReviewPage() {
             }}
           >
             <div className="stat-card">
-              <span>
-                ACTIVE SESSIONS
-              </span>
-
-              <strong>
-                {activeCount}
-              </strong>
+              <span>ACTIVE SESSIONS</span>
+              <strong>{activeCount}</strong>
             </div>
 
             <div className="stat-card">
-              <span>
-                COMPLETED SESSIONS
-              </span>
-
-              <strong>
-                {completedCount}
-              </strong>
+              <span>COMPLETED SESSIONS</span>
+              <strong>{completedCount}</strong>
             </div>
 
             <div className="stat-card">
-              <span>
-                TOTAL FINDINGS
-              </span>
-
-              <strong>
-                {totalFindings}
-              </strong>
+              <span>TOTAL FINDINGS</span>
+              <strong>{totalFindings}</strong>
             </div>
           </div>
 
-          {/* ==================================
-              CONTROLS
-          ================================== */}
+          {/* CONTROLS */}
 
           <div className="review-controls">
             <input
@@ -558,23 +373,15 @@ function PolicyReviewPage() {
               placeholder="⌕   Search review sessions..."
               value={search}
               onChange={(event) =>
-                setSearch(
-                  event.target.value
-                )
+                setSearch(event.target.value)
               }
             />
 
             <div className="filter-buttons">
               <button
                 type="button"
-                className={
-                  filter === 'All'
-                    ? 'selected'
-                    : ''
-                }
-                onClick={() =>
-                  setFilter('All')
-                }
+                className={filter === 'All' ? 'selected' : ''}
+                onClick={() => setFilter('All')}
               >
                 All
               </button>
@@ -582,16 +389,9 @@ function PolicyReviewPage() {
               <button
                 type="button"
                 className={
-                  filter ===
-                  'In Review'
-                    ? 'selected'
-                    : ''
+                  filter === 'In Review' ? 'selected' : ''
                 }
-                onClick={() =>
-                  setFilter(
-                    'In Review'
-                  )
-                }
+                onClick={() => setFilter('In Review')}
               >
                 In Review
               </button>
@@ -599,201 +399,115 @@ function PolicyReviewPage() {
               <button
                 type="button"
                 className={
-                  filter ===
-                  'Completed'
-                    ? 'selected'
-                    : ''
+                  filter === 'Completed' ? 'selected' : ''
                 }
-                onClick={() =>
-                  setFilter(
-                    'Completed'
-                  )
-                }
+                onClick={() => setFilter('Completed')}
               >
                 Completed
               </button>
             </div>
 
             <div className="sort-area">
-              <span>
-                Sort by
-              </span>
+              <span>Sort by</span>
 
               <select
                 value={sort}
-                onChange={(event) =>
-                  setSort(
-                    event.target.value
-                  )
-                }
+                onChange={(event) => setSort(event.target.value)}
               >
-                <option>
-                  Most recent
-                </option>
-
-                <option>
-                  Oldest
-                </option>
+                <option>Most recent</option>
+                <option>Oldest</option>
               </select>
             </div>
           </div>
 
-          {/* ==================================
-              REVIEW SESSION TABLE
-          ================================== */}
+          {/* REVIEW SESSION TABLE */}
 
           <div className="policy-review-table">
             <div className="policy-review-header">
-              <span>
-                REVIEW SESSION
-              </span>
-
-              <span>
-                POLICIES
-              </span>
-
-              <span>
-                REFERENCE GUIDELINES
-              </span>
-
-              <span>
-                DATE CREATED
-              </span>
-
-              <span>
-                STATUS
-              </span>
-
-              <span>
-                FINDINGS
-              </span>
+              <span>REVIEW SESSION</span>
+              <span>POLICIES</span>
+              <span>REFERENCE GUIDELINES</span>
+              <span>DATE CREATED</span>
+              <span>STATUS</span>
+              <span>FINDINGS</span>
             </div>
 
-            {visibleReviews.map(
-              (review) => (
-                <div
-                  className="policy-review-row"
-                  key={review.id}
-                  onClick={() =>
-                    openReviewSession(
-                      review
-                    )
-                  }
-                  style={{
-                    cursor: 'pointer',
-                  }}
-                  title="Open review session"
-                >
-                  {/* SESSION NAME */}
+            {visibleReviews.map((review) => (
+              <div
+                className="policy-review-row"
+                key={review.id}
+                onClick={() => openReviewSession(review)}
+                style={{ cursor: 'pointer' }}
+                title="Open review session"
+              >
+                <div>
+                  <strong
+                    className="review-name"
+                    style={{
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '2px',
+                    }}
+                  >
+                    {review.name || 'Untitled Review Session'}
+                  </strong>
+
+                  <p>
+                    {review.description || 'Policy review session.'}
+                  </p>
+                </div>
+
+                <div className="document-cell">
+                  <span className="pdf-icon">
+                    {review.policies || 1}
+                  </span>
 
                   <div>
-                    <strong
-                      className="review-name"
-                      style={{
-                        textDecoration:
-                          'underline',
-                        textUnderlineOffset:
-                          '2px',
-                      }}
-                    >
-                      {review.name ||
-                        'Untitled Review Session'}
-                    </strong>
-
-                    <p>
-                      {review.description ||
-                        'Policy review session.'}
-                    </p>
-                  </div>
-
-                  {/* POLICIES */}
-
-                  <div className="document-cell">
-                    <span className="pdf-icon">
-                      {review.policies || 1}
-                    </span>
-
-                    <div>
-                      <strong>
-                        {review.policies || 1}{' '}
-                        {(review.policies ||
-                          1) === 1
-                          ? 'Policy'
-                          : 'Policies'}
-                      </strong>
-
-                      <small>
-                        included in session
-                      </small>
-                    </div>
-                  </div>
-
-                  {/* GUIDELINES */}
-
-                  <div className="guideline-cell">
-                    <span className="guideline-icon">
-                      ⌜
-                    </span>
-
-                    <div>
-                      <strong>
-                        {review.guideline ||
-                          'Not selected'}
-                      </strong>
-
-                      <small>
-                        Reference guideline
-                      </small>
-                    </div>
-                  </div>
-
-                  {/* DATE */}
-
-                  <div className="date-cell">
-                    <span>
-                      {review.date ||
-                        'Recently'}
-                    </span>
-
-                    <small>
-                      {review.age ||
-                        'Recently'}
-                    </small>
-                  </div>
-
-                  {/* STATUS */}
-
-                  <div>
-                    <span
-                      className={
-                        review.status ===
-                        'Completed'
-                          ? 'status completed'
-                          : 'status in-review'
-                      }
-                    >
-                      {review.status ||
-                        'In Review'}
-                    </span>
-                  </div>
-
-                  {/* FINDINGS */}
-
-                  <div className="findings-cell">
                     <strong>
-                      {review.findings || 0}
+                      {review.policies || 1}{' '}
+                      {(review.policies || 1) === 1
+                        ? 'Policy'
+                        : 'Policies'}
                     </strong>
-
-                    <small>
-                      identified
-                    </small>
+                    <small>included in session</small>
                   </div>
                 </div>
-              )
-            )}
 
-            {visibleReviews.length ===
-              0 && (
+                <div className="guideline-cell">
+                  <span className="guideline-icon">⌜</span>
+
+                  <div>
+                    <strong>
+                      {review.guideline || 'Not selected'}
+                    </strong>
+                    <small>Reference guideline</small>
+                  </div>
+                </div>
+
+                <div className="date-cell">
+                  <span>{review.date || 'Recently'}</span>
+                  <small>{review.age || 'Recently'}</small>
+                </div>
+
+                <div>
+                  <span
+                    className={
+                      review.status === 'Completed'
+                        ? 'status completed'
+                        : 'status in-review'
+                    }
+                  >
+                    {review.status || 'In Review'}
+                  </span>
+                </div>
+
+                <div className="findings-cell">
+                  <strong>{review.findings || 0}</strong>
+                  <small>identified</small>
+                </div>
+              </div>
+            ))}
+
+            {visibleReviews.length === 0 && (
               <div
                 style={{
                   padding: '35px',
@@ -801,8 +515,7 @@ function PolicyReviewPage() {
                   color: '#777',
                 }}
               >
-                No review sessions match
-                your search.
+                No review sessions match your search.
               </div>
             )}
           </div>

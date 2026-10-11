@@ -1,11 +1,12 @@
+
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 function PolicySelectionPage() {
   const navigate = useNavigate()
 
   // ==========================================
-  // ORIGINAL POLICIES
+  // ORIGINAL POLICIES IN DATABASE
   // ==========================================
 
   const originalPolicies = [
@@ -72,79 +73,63 @@ function PolicySelectionPage() {
   ]
 
   // ==========================================
-  // GET NEWLY UPLOADED POLICIES
+  // READ DATABASE DATA SAFELY
   // ==========================================
 
-  const savedPolicies =
-    JSON.parse(
-      localStorage.getItem('addedPolicies')
-    ) || []
+  function getSavedArray(key) {
+    try {
+      const data = JSON.parse(localStorage.getItem(key))
+      return Array.isArray(data) ? data : []
+    } catch {
+      return []
+    }
+  }
+
+  // ==========================================
+  // GET UPLOADED POLICIES FROM DATABASE
+  // ==========================================
+
+  const savedPolicies = getSavedArray('addedPolicies')
 
   const addedPolicies = savedPolicies.map((policy) => ({
     ...policy,
-
-    date:
-      policy.date ||
-      policy.created ||
-      'Recently',
-
-    age:
-      policy.age ||
-      policy.createdAge ||
-      'Just now',
-
+    date: policy.date || policy.created || 'Recently',
+    age: policy.age || policy.createdAge || 'Just now',
     updated:
       policy.updated ||
       policy.date ||
       policy.created ||
       'Recently',
-
-    updatedAge:
-      policy.updatedAge ||
-      'Just now',
-
-    status:
-      policy.status ||
-      'Active',
-
-    version:
-      policy.version ||
-      'v1.0',
+    updatedAge: policy.updatedAge || 'Just now',
+    status: policy.status || 'Active',
+    version: policy.version || 'v1.0',
   }))
 
   // ==========================================
-  // GET DELETED POLICY IDS
+  // EXCLUDE DELETED DATABASE POLICIES
   // ==========================================
 
-  const deletedPolicyIds =
-    JSON.parse(
-      localStorage.getItem('deletedPolicyIds')
-    ) || []
-
-  // ==========================================
-  // COMBINE ALL POLICIES
-  // ==========================================
+  const deletedPolicyIds = getSavedArray('deletedPolicyIds')
 
   const policies = [
     ...addedPolicies,
     ...originalPolicies,
   ].filter(
-    (policy) =>
-      !deletedPolicyIds.includes(policy.id)
+    (policy) => !deletedPolicyIds.includes(policy.id)
   )
 
   // ==========================================
   // PREVIOUSLY SELECTED POLICIES
   // ==========================================
 
-  const previouslySelected =
-    JSON.parse(
-      localStorage.getItem('selectedPolicies')
-    ) || []
+  const previouslySelected = getSavedArray('selectedPolicies')
 
-  const startingSelections =
-    previouslySelected.map(
-      (policy) => policy.id
+  // Only restore selections that still exist
+  // in the Policy Database.
+  const startingSelections = previouslySelected
+    .map((policy) => policy.id)
+    .filter((id) =>
+      policies.some((policy) => policy.id === id)
     )
 
   const [selectedPolicies, setSelectedPolicies] =
@@ -160,9 +145,7 @@ function PolicySelectionPage() {
     const searchText = search.toLowerCase()
 
     return (
-      policy.name
-        .toLowerCase()
-        .includes(searchText) ||
+      policy.name.toLowerCase().includes(searchText) ||
       (policy.description || '')
         .toLowerCase()
         .includes(searchText)
@@ -174,6 +157,14 @@ function PolicySelectionPage() {
   // ==========================================
 
   function togglePolicy(id) {
+    // Do not allow selecting policies
+    // that are missing from the database.
+    const existsInDatabase = policies.some(
+      (policy) => policy.id === id
+    )
+
+    if (!existsInDatabase) return
+
     if (selectedPolicies.includes(id)) {
       setSelectedPolicies(
         selectedPolicies.filter(
@@ -193,17 +184,31 @@ function PolicySelectionPage() {
   // ==========================================
 
   function confirmSelections() {
-    if (selectedPolicies.length === 0) {
+    // Recheck the database at confirmation time
+    // so deleted policies cannot be added.
+    const currentUploadedPolicies =
+      getSavedArray('addedPolicies')
+
+    const currentDeletedIds =
+      getSavedArray('deletedPolicyIds')
+
+    const currentDatabasePolicies = [
+      ...currentUploadedPolicies,
+      ...originalPolicies,
+    ].filter(
+      (policy) => !currentDeletedIds.includes(policy.id)
+    )
+
+    const selected = currentDatabasePolicies.filter(
+      (policy) => selectedPolicies.includes(policy.id)
+    )
+
+    if (selected.length === 0) {
       alert(
-        'Please select at least one policy for this review session.'
+        'Please select at least one policy from the Policy Database.'
       )
       return
     }
-
-    const selected = policies.filter(
-      (policy) =>
-        selectedPolicies.includes(policy.id)
-    )
 
     localStorage.setItem(
       'selectedPolicies',
@@ -221,11 +226,13 @@ function PolicySelectionPage() {
     navigate('/reviews/new')
   }
 
+  // ==========================================
+  // PAGE
+  // ==========================================
+
   return (
     <div className="policy-selection-page">
-      {/* ======================================
-          BACKGROUND PAGE
-      ====================================== */}
+      {/* BACKGROUND PAGE */}
 
       <div className="selection-background">
         <header className="top-bar">
@@ -243,9 +250,7 @@ function PolicySelectionPage() {
 
           <div className="top-right">
             <div className="search-box">
-              <span>
-                ⌕
-              </span>
+              <span>⌕</span>
 
               <input
                 type="text"
@@ -253,69 +258,45 @@ function PolicySelectionPage() {
               />
             </div>
 
-            <span className="top-icon">
-              ?
-            </span>
-
-            <span className="top-icon">
-              ⚙
-            </span>
+            <span className="top-icon">?</span>
+            <span className="top-icon">⚙</span>
 
             <div className="user-area">
-              <div className="user-avatar">
-                SC
-              </div>
-
-              <span>
-                Sarah Chen
-              </span>
+              <div className="user-avatar">SC</div>
+              <span>Sarah Chen</span>
             </div>
           </div>
         </header>
 
         <div className="app-body">
+          {/* SIDEBAR */}
+
           <aside className="sidebar">
-            <div className="nav-item">
-              <span className="nav-icon">
-                ▦
-              </span>
-
+            <Link to="/dashboard" className="nav-item">
               Dashboard
-            </div>
+            </Link>
 
-            <div className="nav-item active">
-              <span className="nav-icon">
-                ▣
-              </span>
-
+            <Link to="/reviews" className="nav-item active">
               Review Sessions
-            </div>
+            </Link>
 
-            <div className="nav-item">
-              <span className="nav-icon">
-                ⊗
-              </span>
-
+            <Link to="/policies" className="nav-item">
               Policy Database
-            </div>
+            </Link>
 
-            <div className="nav-item">
-              <span className="nav-icon">
-                ⊗
-              </span>
-
+            <Link to="/guidelines" className="nav-item">
               Guideline Database
-            </div>
+            </Link>
+
+            <Link to="/audit-log" className="nav-item">
+              Audit Log
+            </Link>
           </aside>
 
           <main className="selection-background-content">
-            <span>
-              ← Back to Review Sessions
-            </span>
+            <span>← Back to Review Sessions</span>
 
-            <h1>
-              Start a Review Session
-            </h1>
+            <h1>Start a Review Session</h1>
 
             <p>
               Create a review session and choose the policies
@@ -323,37 +304,27 @@ function PolicySelectionPage() {
             </p>
 
             <div className="background-card">
-              <h2>
-                Review Session Details
-              </h2>
+              <h2>Review Session Details</h2>
             </div>
 
             <div className="background-card">
-              <h2>
-                Policies in this Review Session
-              </h2>
+              <h2>Policies in this Review Session</h2>
             </div>
           </main>
         </div>
       </div>
 
-      {/* ======================================
-          DARK / BLUR OVERLAY
-      ====================================== */}
+      {/* DARK / BLUR OVERLAY */}
 
       <div
         className="selection-overlay"
         onClick={cancelSelection}
       ></div>
 
-      {/* ======================================
-          POLICY SELECTION MODAL
-      ====================================== */}
+      {/* POLICY SELECTION MODAL */}
 
       <div className="policy-selection-modal">
-        {/* ==================================
-            MODAL HEADER
-        ================================== */}
+        {/* MODAL HEADER */}
 
         <div
           style={{
@@ -365,21 +336,16 @@ function PolicySelectionPage() {
           }}
         >
           <div>
-            <h1
-              style={{
-                marginBottom: '7px',
-              }}
-            >
+            <h1 style={{ marginBottom: '7px' }}>
               Select Policies
             </h1>
 
             <p
               className="selection-subtitle"
-              style={{
-                margin: 0,
-              }}
+              style={{ margin: 0 }}
             >
-              Choose the policies to include in this review session.
+              Choose existing policies from the Policy Database
+              to include in this review session.
             </p>
           </div>
 
@@ -399,9 +365,7 @@ function PolicySelectionPage() {
           </button>
         </div>
 
-        {/* ==================================
-            SEARCH + SELECTION COUNT
-        ================================== */}
+        {/* SEARCH + SELECTION COUNT */}
 
         <div
           style={{
@@ -447,103 +411,56 @@ function PolicySelectionPage() {
           </span>
         </div>
 
-        {/* ==================================
-            POLICY TABLE
-        ================================== */}
+        {/* POLICY TABLE */}
 
         <div className="selection-table">
           <div className="selection-table-header">
             <div></div>
-
-            <div>
-              POLICY NAME
-            </div>
-
-            <div>
-              VERSION
-            </div>
-
-            <div>
-              LAST UPDATED
-            </div>
-
-            <div>
-              STATUS
-            </div>
+            <div>POLICY NAME</div>
+            <div>VERSION</div>
+            <div>LAST UPDATED</div>
+            <div>STATUS</div>
           </div>
 
           {visiblePolicies.map((policy) => (
             <div
               className="selection-table-row"
               key={policy.id}
-              style={{
-                cursor: 'pointer',
-              }}
-              onClick={() =>
-                togglePolicy(policy.id)
-              }
+              style={{ cursor: 'pointer' }}
+              onClick={() => togglePolicy(policy.id)}
             >
-              {/* CHECKBOX */}
-
               <div className="selection-checkbox-cell">
                 <input
                   type="checkbox"
-                  checked={
-                    selectedPolicies.includes(
-                      policy.id
-                    )
-                  }
-                  onChange={() =>
-                    togglePolicy(policy.id)
-                  }
+                  checked={selectedPolicies.includes(
+                    policy.id
+                  )}
+                  onChange={() => togglePolicy(policy.id)}
                   onClick={(event) =>
                     event.stopPropagation()
                   }
                 />
               </div>
 
-              {/* POLICY */}
-
               <div className="selection-policy-name">
-                <strong>
-                  {policy.name}
-                </strong>
-
-                <p>
-                  {policy.description}
-                </p>
+                <strong>{policy.name}</strong>
+                <p>{policy.description}</p>
               </div>
-
-              {/* VERSION */}
 
               <div className="selection-date">
                 <span>
                   {policy.version || 'v1.0'}
                 </span>
-
-                <small>
-                  Current version
-                </small>
+                <small>Current version</small>
               </div>
-
-              {/* LAST UPDATED */}
 
               <div className="selection-date">
-                <span>
-                  {policy.updated}
-                </span>
-
-                <small>
-                  {policy.updatedAge}
-                </small>
+                <span>{policy.updated}</span>
+                <small>{policy.updatedAge}</small>
               </div>
 
-              {/* STATUS */}
-
               <div>
-                <span
-                  className="status completed"
-                >
+                <span className="status completed">
                   {policy.status || 'Active'}
                 </span>
               </div>
@@ -558,14 +475,14 @@ function PolicySelectionPage() {
                 color: '#777',
               }}
             >
-              No policies match your search.
+              {policies.length === 0
+                ? 'No policies are available in the Policy Database.'
+                : 'No policies match your search.'}
             </div>
           )}
         </div>
 
-        {/* ==================================
-            BOTTOM ACTIONS
-        ================================== */}
+        {/* BOTTOM ACTIONS */}
 
         <div
           className="selection-confirm-row"

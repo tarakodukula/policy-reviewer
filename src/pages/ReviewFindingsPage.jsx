@@ -1,5 +1,103 @@
-import { Link, useNavigate } from 'react-router-dom'
+
 import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  getGuidelinesForPolicies,
+  getGuidelinesForPolicy,
+  getPoliciesForGuideline,
+} from '../data/guidelineMappings'
+
+// ==========================================
+// READ LOCAL STORAGE SAFELY
+// ==========================================
+
+function getSavedArray(key) {
+  try {
+    const data = JSON.parse(localStorage.getItem(key))
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
+}
+
+function getSavedObject(key) {
+  try {
+    const data = JSON.parse(localStorage.getItem(key))
+    return data && typeof data === 'object' && !Array.isArray(data)
+      ? data
+      : null
+  } catch {
+    return null
+  }
+}
+
+// ==========================================
+// DEMONSTRATION FINDINGS
+// These are examples, not actual AI results.
+// Each example belongs to a specific demo policy.
+// ==========================================
+
+const demonstrationFindings = [
+  {
+    id: 1,
+    policyId: 1,
+    guidelineId: 1,
+    status: 'Suggested Change',
+    priority: 'High',
+    category: 'Coverage Criteria',
+    policyCriterion: 'Criterion 4.2.1',
+    guidelineCriterion: 'Criterion 4.2.1',
+    summary:
+      'Current policy criteria may be narrower than the selected reference guideline.',
+    rationale:
+      'The reference guideline includes an additional qualifying clinical pathway that is not clearly represented in the current policy language.',
+    policyText:
+      'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A and B, including documented ischemia.',
+    guidelineText:
+      'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, and C, including documented ischemia or significant anatomical findings.',
+    suggestedText:
+      'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, or C, including documented ischemia or significant anatomical findings.',
+  },
+  {
+    id: 2,
+    policyId: 2,
+    guidelineId: 2,
+    status: 'Suggested Change',
+    priority: 'Low',
+    category: 'Prior Authorization',
+    policyCriterion: 'Prior Authorization',
+    guidelineCriterion: 'Criterion 7.1.2',
+    summary:
+      'Prior authorization wording should be clarified to better match the selected guideline.',
+    rationale:
+      'The policy and guideline are generally aligned, but the guideline provides clearer language regarding exceptions to prior authorization requirements.',
+    policyText:
+      'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except in certain cases.',
+    guidelineText:
+      'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, with exceptions for patients meeting established continuation-of-therapy criteria.',
+    suggestedText:
+      'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except for patients who meet established continuation-of-therapy criteria.',
+  },
+  {
+    id: 3,
+    policyId: 3,
+    guidelineId: 3,
+    status: 'No Change Needed',
+    priority: 'None',
+    category: 'Clinical Eligibility',
+    policyCriterion: 'Eligibility Criteria',
+    guidelineCriterion: 'Clinical Eligibility',
+    summary:
+      'The reviewed policy language is consistent with the selected reference guideline.',
+    rationale:
+      'The demonstration screening did not identify a meaningful difference between the example policy criteria and example reference guideline.',
+    policyText:
+      'Coverage is available when clinical eligibility requirements and documented treatment criteria are satisfied.',
+    guidelineText:
+      'Coverage is appropriate when established clinical eligibility and treatment criteria are satisfied.',
+    suggestedText: '',
+  },
+]
 
 function ReviewFindingsPage() {
   const navigate = useNavigate()
@@ -8,302 +106,196 @@ function ReviewFindingsPage() {
   // CURRENT REVIEW SESSION
   // ==========================================
 
-  const currentReview =
-    JSON.parse(
-      localStorage.getItem('currentReview')
-    ) || null
+  const currentReview = getSavedObject('currentReview')
 
-  const selectedPolicies =
-    currentReview?.selectedPolicies ||
-    JSON.parse(
-      localStorage.getItem('selectedPolicies')
-    ) ||
-    []
+  const selectedPolicies = Array.isArray(
+    currentReview?.selectedPolicies
+  )
+    ? currentReview.selectedPolicies
+    : getSavedArray('selectedPolicies')
 
-  const selectedGuidelines =
-    currentReview?.selectedGuidelines ||
-    JSON.parse(
-      localStorage.getItem('selectedGuidelines')
-    ) ||
-    []
+  // ==========================================
+  // GUIDELINES SAVED WITH THE REVIEW
+  // ==========================================
+
+  const savedGuidelines = Array.isArray(
+    currentReview?.selectedGuidelines
+  )
+    ? currentReview.selectedGuidelines
+    : getSavedArray('selectedGuidelines')
+
+  // Recalculate associations using the shared mapping
+  // logic. The review's saved guidelines are used so
+  // historical reviews do not depend on newly added
+  // guidelines from other sessions.
+
+  const selectedGuidelines = getGuidelinesForPolicies(
+    selectedPolicies,
+    savedGuidelines
+  )
 
   const reviewName =
     currentReview?.name ||
     localStorage.getItem('newReviewName') ||
     'Policy Review Session'
 
+  const reviewDescription =
+    currentReview?.description || ''
+
   // ==========================================
   // FILTER
   // ==========================================
 
-  const [activeFilter, setActiveFilter] =
-    useState('All')
+  const [activeFilter, setActiveFilter] = useState('All')
 
   // ==========================================
   // SAVED REVIEWER DECISIONS
   // ==========================================
 
-  const recommendationDecisions =
-    JSON.parse(
-      localStorage.getItem(
-        'recommendationDecisions'
-      )
-    ) || []
+  const recommendationDecisions = getSavedArray(
+    'recommendationDecisions'
+  )
 
   function getDecision(result) {
     return recommendationDecisions.find(
       (decision) =>
         String(decision.reviewId) ===
-          String(currentReview?.id || null) &&
-        String(decision.findingId) ===
-          String(result.id)
+          String(currentReview?.id ?? null) &&
+        String(decision.findingId) === String(result.id)
     )
   }
 
   // ==========================================
-  // DEMONSTRATION SCREENING RESULTS
+  // MATCH DEMONSTRATION FINDINGS
+  // TO ACTUAL POLICY/GUIDELINE PAIRS
   // ==========================================
 
-  const policyOne =
-    selectedPolicies[0]?.name ||
-    selectedPolicies[0]?.fileName ||
-    'Cardiac Coverage Policy'
+  const results = demonstrationFindings
+    .map((finding) => {
+      const matchingPolicy = selectedPolicies.find(
+        (policy) =>
+          String(policy.id) === String(finding.policyId)
+      )
 
-  const policyTwo =
-    selectedPolicies[1]?.name ||
-    selectedPolicies[1]?.fileName ||
-    selectedPolicies[0]?.name ||
-    selectedPolicies[0]?.fileName ||
-    'Diabetes Treatment Policy'
+      const matchingGuideline = selectedGuidelines.find(
+        (guideline) =>
+          String(guideline.id) ===
+          String(finding.guidelineId)
+      )
 
-  const policyThree =
-    selectedPolicies[2]?.name ||
-    selectedPolicies[2]?.fileName ||
-    selectedPolicies[0]?.name ||
-    selectedPolicies[0]?.fileName ||
-    'Oncology Coverage Policy'
+      if (!matchingPolicy || !matchingGuideline) {
+        return null
+      }
 
-  const guidelineOne =
-    selectedGuidelines[0]?.name ||
-    '2026 Cardiac Coverage Guideline'
+      // Double-check the actual policy-to-guideline
+      // relationship before showing the finding.
 
-  const guidelineTwo =
-    selectedGuidelines[1]?.name ||
-    selectedGuidelines[0]?.name ||
-    '2026 Diabetes Treatment Guideline'
+      const associatedGuidelines = getGuidelinesForPolicy(
+        matchingPolicy,
+        selectedGuidelines
+      )
 
-  const guidelineThree =
-    selectedGuidelines[2]?.name ||
-    selectedGuidelines[0]?.name ||
-    '2026 Oncology Coverage Guideline'
+      const isMapped = associatedGuidelines.some(
+        (guideline) =>
+          String(guideline.id) ===
+          String(matchingGuideline.id)
+      )
 
-  const results = [
-    {
-      id: 1,
+      if (!isMapped) {
+        return null
+      }
 
-      policy: policyOne,
-
-      guideline: guidelineOne,
-
-      status: 'Suggested Change',
-
-      priority: 'High',
-
-      category: 'Coverage Criteria',
-
-      policyCriterion: 'Criterion 4.2.1',
-
-      guidelineCriterion: 'Criterion 4.2.1',
-
-      summary:
-        'Current policy criteria may be narrower than the selected reference guideline.',
-
-      rationale:
-        'The reference guideline includes an additional qualifying clinical pathway that is not clearly represented in the current policy language.',
-
-      policyText:
-        'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A and B, including documented ischemia.',
-
-      guidelineText:
-        'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, and C, including documented ischemia or significant anatomical findings.',
-
-      suggestedText:
-        'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, or C, including documented ischemia or significant anatomical findings.',
-    },
-
-    {
-      id: 2,
-
-      policy: policyTwo,
-
-      guideline: guidelineTwo,
-
-      status: 'Suggested Change',
-
-      priority: 'Low',
-
-      category: 'Prior Authorization',
-
-      policyCriterion: 'Prior Authorization',
-
-      guidelineCriterion: 'Criterion 7.1.2',
-
-      summary:
-        'Prior authorization wording should be clarified to better match the selected guideline.',
-
-      rationale:
-        'The policy and guideline are generally aligned, but the guideline provides clearer language regarding exceptions to prior authorization requirements.',
-
-      policyText:
-        'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except in certain cases.',
-
-      guidelineText:
-        'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, with exceptions for patients meeting established continuation-of-therapy criteria.',
-
-      suggestedText:
-        'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except for patients who meet established continuation-of-therapy criteria.',
-    },
-
-    {
-      id: 3,
-
-      policy: policyThree,
-
-      guideline: guidelineThree,
-
-      status: 'No Change Needed',
-
-      priority: 'None',
-
-      category: 'Clinical Eligibility',
-
-      policyCriterion: 'Eligibility Criteria',
-
-      guidelineCriterion: 'Clinical Eligibility',
-
-      summary:
-        'The reviewed policy language is consistent with the selected reference guideline.',
-
-      rationale:
-        'The screening did not identify a meaningful difference between the current policy criteria and the selected reference guideline.',
-
-      policyText:
-        'Coverage is available when clinical eligibility requirements and documented treatment criteria are satisfied.',
-
-      guidelineText:
-        'Coverage is appropriate when established clinical eligibility and treatment criteria are satisfied.',
-
-      suggestedText: '',
-    },
-  ]
+      return {
+        ...finding,
+        policy:
+          matchingPolicy.name ||
+          matchingPolicy.fileName ||
+          'Unnamed Policy',
+        guideline:
+          matchingGuideline.name ||
+          'Unnamed Guideline',
+      }
+    })
+    .filter(Boolean)
 
   // ==========================================
   // COUNTS
   // ==========================================
 
-  const highPriorityCount =
-    results.filter(
-      (result) =>
-        result.status ===
-          'Suggested Change' &&
-        result.priority === 'High'
-    ).length
+  const highPriorityCount = results.filter(
+    (result) =>
+      result.status === 'Suggested Change' &&
+      result.priority === 'High'
+  ).length
 
-  const lowPriorityCount =
-    results.filter(
-      (result) =>
-        result.status ===
-          'Suggested Change' &&
-        result.priority === 'Low'
-    ).length
+  const lowPriorityCount = results.filter(
+    (result) =>
+      result.status === 'Suggested Change' &&
+      result.priority === 'Low'
+  ).length
 
-  const noChangeCount =
-    results.filter(
-      (result) =>
-        result.status ===
-        'No Change Needed'
-    ).length
+  const noChangeCount = results.filter(
+    (result) => result.status === 'No Change Needed'
+  ).length
 
-  const actionCount =
-    results.filter(
-      (result) =>
-        result.status ===
-          'Suggested Change' &&
-        !getDecision(result)
-    ).length
+  const actionCount = results.filter(
+    (result) =>
+      result.status === 'Suggested Change' &&
+      !getDecision(result)
+  ).length
 
-  const decidedCount =
-    results.filter(
-      (result) =>
-        result.status ===
-          'Suggested Change' &&
-        getDecision(result)
-    ).length
+  const decidedCount = results.filter(
+    (result) =>
+      result.status === 'Suggested Change' &&
+      Boolean(getDecision(result))
+  ).length
+
+  const totalSuggestedChanges =
+    highPriorityCount + lowPriorityCount
 
   // ==========================================
   // FILTER RESULTS
   // ==========================================
 
-  const visibleResults =
-    results.filter((result) => {
-      if (activeFilter === 'All') {
-        return true
-      }
-
-      if (
-        activeFilter ===
-        'Needs Attention'
-      ) {
-        return (
-          result.status ===
-            'Suggested Change' &&
-          !getDecision(result)
-        )
-      }
-
-      if (activeFilter === 'Decided') {
-        return Boolean(
-          getDecision(result)
-        )
-      }
-
-      if (
-        activeFilter ===
-        'High Priority'
-      ) {
-        return (
-          result.status ===
-            'Suggested Change' &&
-          result.priority === 'High'
-        )
-      }
-
-      if (
-        activeFilter ===
-        'Low Priority'
-      ) {
-        return (
-          result.status ===
-            'Suggested Change' &&
-          result.priority === 'Low'
-        )
-      }
-
-      if (
-        activeFilter ===
-        'No Change Needed'
-      ) {
-        return (
-          result.status ===
-          'No Change Needed'
-        )
-      }
-
+  const visibleResults = results.filter((result) => {
+    if (activeFilter === 'All') {
       return true
-    })
+    }
+
+    if (activeFilter === 'Needs Attention') {
+      return (
+        result.status === 'Suggested Change' &&
+        !getDecision(result)
+      )
+    }
+
+    if (activeFilter === 'Decided') {
+      return Boolean(getDecision(result))
+    }
+
+    if (activeFilter === 'High Priority') {
+      return (
+        result.status === 'Suggested Change' &&
+        result.priority === 'High'
+      )
+    }
+
+    if (activeFilter === 'Low Priority') {
+      return (
+        result.status === 'Suggested Change' &&
+        result.priority === 'Low'
+      )
+    }
+
+    if (activeFilter === 'No Change Needed') {
+      return result.status === 'No Change Needed'
+    }
+
+    return true
+  })
 
   // ==========================================
-  // OPEN RECOMMENDATION
+  // OPEN RECOMMENDATION EDITOR
   // ==========================================
 
   function openRecommendation(result) {
@@ -312,13 +304,11 @@ function ReviewFindingsPage() {
       JSON.stringify(result)
     )
 
-    navigate(
-      `/reviews/findings/${result.id}/edit`
-    )
+    navigate(`/reviews/findings/${result.id}/edit`)
   }
 
   // ==========================================
-  // COMPLETE REVIEW
+  // COMPLETE REVIEW SESSION
   // ==========================================
 
   function completeReview() {
@@ -327,56 +317,49 @@ function ReviewFindingsPage() {
       return
     }
 
-    if (actionCount > 0) {
-      const continueAnyway =
-        window.confirm(
-          `${actionCount} ${
-            actionCount === 1
-              ? 'recommendation still requires'
-              : 'recommendations still require'
-          } a reviewer decision. Complete this review session anyway?`
-        )
+    if (results.length === 0) {
+      const confirmed = window.confirm(
+        'No demonstration findings were generated for these policies. This does not mean the policies have been clinically screened. Complete the review session anyway?'
+      )
 
-      if (!continueAnyway) {
-        return
-      }
+      if (!confirmed) return
+    } else if (actionCount > 0) {
+      const continueAnyway = window.confirm(
+        `${actionCount} ${
+          actionCount === 1
+            ? 'recommendation still requires'
+            : 'recommendations still require'
+        } a reviewer decision. Complete this review session anyway?`
+      )
+
+      if (!continueAnyway) return
     } else {
-      const confirmed =
-        window.confirm(
-          'All recommendations have been reviewed. Mark this review session as completed?'
-        )
+      const confirmed = window.confirm(
+        'All demonstration recommendations have been reviewed. Mark this review session as completed?'
+      )
 
-      if (!confirmed) {
-        return
-      }
+      if (!confirmed) return
     }
 
     const completedReview = {
       ...currentReview,
       status: 'Completed',
+      findings: results.length,
     }
 
-    const savedReviews =
-      JSON.parse(
-        localStorage.getItem(
-          'createdReviews'
-        )
-      ) || []
+    const savedReviews = getSavedArray('createdReviews')
 
-    const updatedReviews =
-      savedReviews.map((review) => {
-        if (
-          String(review.id) ===
-          String(currentReview.id)
-        ) {
-          return {
-            ...review,
-            status: 'Completed',
-          }
+    const updatedReviews = savedReviews.map((review) => {
+      if (String(review.id) === String(currentReview.id)) {
+        return {
+          ...review,
+          status: 'Completed',
+          findings: results.length,
         }
+      }
 
-        return review
-      })
+      return review
+    })
 
     localStorage.setItem(
       'createdReviews',
@@ -391,11 +374,36 @@ function ReviewFindingsPage() {
     navigate('/reviews')
   }
 
+  // ==========================================
+  // COMMON STYLES
+  // ==========================================
+
+  const summaryCardStyle = {
+    background: '#ffffff',
+    border: '1px solid #dddddd',
+    borderRadius: '6px',
+    padding: '18px',
+  }
+
+  const summaryLabelStyle = {
+    fontSize: '12px',
+    color: '#777',
+    fontWeight: '700',
+    marginBottom: '8px',
+  }
+
+  const summaryNumberStyle = {
+    fontSize: '27px',
+    fontWeight: '700',
+  }
+
+  // ==========================================
+  // PAGE
+  // ==========================================
+
   return (
     <div className="app-page">
-      {/* ======================================
-          TOP BAR
-      ====================================== */}
+      {/* TOP BAR */}
 
       <header className="top-bar">
         <div className="brand-area">
@@ -412,50 +420,28 @@ function ReviewFindingsPage() {
 
         <div className="top-right">
           <div className="search-box">
-            <span>
-              ⌕
-            </span>
-
+            <span>⌕</span>
             <input
               type="text"
               placeholder="Search policies, guidelines..."
             />
           </div>
 
-          <span className="top-icon">
-            ?
-          </span>
-
-          <span className="top-icon">
-            ⚙
-          </span>
+          <span className="top-icon">?</span>
+          <span className="top-icon">⚙</span>
 
           <div className="user-area">
-            <div className="user-avatar">
-              SC
-            </div>
-
-            <span>
-              Sarah Chen
-            </span>
+            <div className="user-avatar">SC</div>
+            <span>Sarah Chen</span>
           </div>
         </div>
       </header>
 
       <div className="app-body">
-        {/* ==================================
-            SIDEBAR
-        ================================== */}
+        {/* SIDEBAR */}
 
         <aside className="sidebar">
-          <Link
-            to="/dashboard"
-            className="nav-item"
-          >
-            <span className="nav-icon">
-              ▦
-            </span>
-
+          <Link to="/dashboard" className="nav-item">
             Dashboard
           </Link>
 
@@ -463,51 +449,30 @@ function ReviewFindingsPage() {
             to="/reviews"
             className="nav-item active"
           >
-            <span className="nav-icon">
-              ▣
-            </span>
-
             Review Sessions
           </Link>
 
-          <Link
-            to="/policies"
-            className="nav-item"
-          >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
+          <Link to="/policies" className="nav-item">
             Policy Database
           </Link>
 
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
-            <span className="nav-icon">
-              ⊗
-            </span>
-
+          <Link to="/guidelines" className="nav-item">
             Guideline Database
+          </Link>
+
+          <Link to="/audit-log" className="nav-item">
+            Audit Log
           </Link>
         </aside>
 
-        {/* ==================================
-            MAIN CONTENT
-        ================================== */}
+        {/* MAIN CONTENT */}
 
         <main className="review-findings-content">
-          <Link
-            to="/reviews"
-            className="back-link"
-          >
+          <Link to="/reviews" className="back-link">
             ← Back to Review Sessions
           </Link>
 
-          {/* ==================================
-              TITLE
-          ================================== */}
+          {/* TITLE */}
 
           <div className="findings-title-row">
             <div>
@@ -522,20 +487,27 @@ function ReviewFindingsPage() {
                 REVIEW RESULTS
               </div>
 
-              <h1>
-                {reviewName}
-              </h1>
+              <h1>{reviewName}</h1>
 
               <p className="review-findings-subtitle">
-                Automated screening is complete.
-                Review the recommendations below
-                and take action on suggested policy
-                changes.
+                Review the demonstration screening findings
+                and take action on suggested policy changes.
               </p>
+
+              {reviewDescription && (
+                <p
+                  style={{
+                    fontSize: '13px',
+                    color: '#64748b',
+                    marginTop: '8px',
+                  }}
+                >
+                  {reviewDescription}
+                </p>
+              )}
             </div>
 
-            {currentReview?.status !==
-              'Completed' && (
+            {currentReview?.status !== 'Completed' && (
               <button
                 type="button"
                 className="complete-review-button"
@@ -546,64 +518,61 @@ function ReviewFindingsPage() {
             )}
           </div>
 
-          {/* ==================================
-              REVIEW SUMMARY
-          ================================== */}
+          {/* DEMO NOTICE */}
+
+          <section
+            style={{
+              padding: '12px 16px',
+              marginTop: '20px',
+              background: '#f8fafc',
+              border: '1px solid #dbe3eb',
+              borderLeft: '4px solid #64748b',
+              borderRadius: '4px',
+              fontSize: '13px',
+              lineHeight: '1.6',
+              color: '#475569',
+            }}
+          >
+            <strong>Demonstration results:</strong>{' '}
+            This page currently uses sample screening
+            findings. The policy-to-guideline associations
+            are based on the selected review references,
+            but no real clinical document comparison has
+            been performed.
+          </section>
+
+          {/* REVIEW SUMMARY */}
 
           <section
             style={{
               display: 'grid',
               gridTemplateColumns:
-                'repeat(4, 1fr)',
+                'repeat(auto-fit, minmax(150px, 1fr))',
               gap: '14px',
               margin: '24px 0',
             }}
           >
-            <div
-              style={{
-                background: '#ffffff',
-                border:
-                  '1px solid #dddddd',
-                borderRadius: '6px',
-                padding: '18px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '12px',
-                  color: '#777',
-                  fontWeight: '700',
-                  marginBottom: '8px',
-                }}
-              >
+            <div style={summaryCardStyle}>
+              <div style={summaryLabelStyle}>
                 POLICIES REVIEWED
               </div>
 
-              <div
-                style={{
-                  fontSize: '27px',
-                  fontWeight: '700',
-                }}
-              >
+              <div style={summaryNumberStyle}>
                 {selectedPolicies.length}
               </div>
             </div>
 
             <div
               style={{
+                ...summaryCardStyle,
                 background: '#fff7f7',
-                border:
-                  '1px solid #e6b7b7',
-                borderRadius: '6px',
-                padding: '18px',
+                borderColor: '#e6b7b7',
               }}
             >
               <div
                 style={{
-                  fontSize: '12px',
+                  ...summaryLabelStyle,
                   color: '#8c2d2d',
-                  fontWeight: '700',
-                  marginBottom: '8px',
                 }}
               >
                 HIGH PRIORITY
@@ -611,8 +580,7 @@ function ReviewFindingsPage() {
 
               <div
                 style={{
-                  fontSize: '27px',
-                  fontWeight: '700',
+                  ...summaryNumberStyle,
                   color: '#9f2424',
                 }}
               >
@@ -622,19 +590,15 @@ function ReviewFindingsPage() {
 
             <div
               style={{
+                ...summaryCardStyle,
                 background: '#fffaf0',
-                border:
-                  '1px solid #e5d2a6',
-                borderRadius: '6px',
-                padding: '18px',
+                borderColor: '#e5d2a6',
               }}
             >
               <div
                 style={{
-                  fontSize: '12px',
+                  ...summaryLabelStyle,
                   color: '#8a6418',
-                  fontWeight: '700',
-                  marginBottom: '8px',
                 }}
               >
                 LOW PRIORITY
@@ -642,8 +606,7 @@ function ReviewFindingsPage() {
 
               <div
                 style={{
-                  fontSize: '27px',
-                  fontWeight: '700',
+                  ...summaryNumberStyle,
                   color: '#8a6418',
                 }}
               >
@@ -653,19 +616,15 @@ function ReviewFindingsPage() {
 
             <div
               style={{
+                ...summaryCardStyle,
                 background: '#f4faf5',
-                border:
-                  '1px solid #b9d7bd',
-                borderRadius: '6px',
-                padding: '18px',
+                borderColor: '#b9d7bd',
               }}
             >
               <div
                 style={{
-                  fontSize: '12px',
+                  ...summaryLabelStyle,
                   color: '#387644',
-                  fontWeight: '700',
-                  marginBottom: '8px',
                 }}
               >
                 NO CHANGE NEEDED
@@ -673,8 +632,7 @@ function ReviewFindingsPage() {
 
               <div
                 style={{
-                  fontSize: '27px',
-                  fontWeight: '700',
+                  ...summaryNumberStyle,
                   color: '#387644',
                 }}
               >
@@ -683,9 +641,7 @@ function ReviewFindingsPage() {
             </div>
           </section>
 
-          {/* ==================================
-              REVIEW STATUS BANNER
-          ================================== */}
+          {/* REVIEW STATUS */}
 
           {actionCount > 0 ? (
             <section
@@ -693,14 +649,11 @@ function ReviewFindingsPage() {
                 padding: '14px 18px',
                 marginBottom: '20px',
                 background: '#fff8e7',
-                border:
-                  '1px solid #e5cf93',
-                borderLeft:
-                  '4px solid #c38b13',
+                border: '1px solid #e5cf93',
+                borderLeft: '4px solid #c38b13',
                 borderRadius: '4px',
                 display: 'flex',
-                justifyContent:
-                  'space-between',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 gap: '20px',
               }}
@@ -721,8 +674,8 @@ function ReviewFindingsPage() {
                     marginTop: '3px',
                   }}
                 >
-                  Review each suggested change
-                  before completing this session.
+                  Review each suggested change before
+                  completing this session.
                 </div>
               </div>
 
@@ -743,22 +696,20 @@ function ReviewFindingsPage() {
                 padding: '14px 18px',
                 marginBottom: '20px',
                 background: '#f4faf5',
-                border:
-                  '1px solid #b9d7bd',
-                borderLeft:
-                  '4px solid #4e8b59',
+                border: '1px solid #b9d7bd',
+                borderLeft: '4px solid #4e8b59',
                 borderRadius: '4px',
                 display: 'flex',
-                justifyContent:
-                  'space-between',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 gap: '20px',
               }}
             >
               <div>
                 <strong>
-                  All recommendations have been
-                  reviewed.
+                  {totalSuggestedChanges === 0
+                    ? 'No demonstration recommendations require a decision.'
+                    : 'All demonstration recommendations have been reviewed.'}
                 </strong>
 
                 <div
@@ -768,8 +719,9 @@ function ReviewFindingsPage() {
                     marginTop: '3px',
                   }}
                 >
-                  This review session is ready to
-                  be completed.
+                  {results.length === 0
+                    ? 'No sample findings are available for these selected policies. This does not indicate clinical approval.'
+                    : 'There are no outstanding reviewer decisions for the available demonstration findings.'}
                 </div>
               </div>
 
@@ -781,66 +733,120 @@ function ReviewFindingsPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                REVIEW COMPLETE
+                NO PENDING ACTIONS
               </span>
             </section>
           )}
 
-          {/* ==================================
-              SESSION REFERENCES
-          ================================== */}
+          {/* SESSION REFERENCES */}
 
           <section className="findings-selection-summary">
             <div className="findings-summary-column">
-              <h3>
-                Policies Reviewed
-              </h3>
+              <h3>Policies Reviewed</h3>
 
-              {selectedPolicies.length >
-              0 ? (
-                selectedPolicies.map(
-                  (policy) => (
-                    <p key={policy.id}>
-                      •{' '}
-                      {policy.name ||
-                        policy.fileName}
-                    </p>
+              {selectedPolicies.length > 0 ? (
+                selectedPolicies.map((policy) => {
+                  const associatedGuidelines =
+                    getGuidelinesForPolicy(
+                      policy,
+                      selectedGuidelines
+                    )
+
+                  return (
+                    <div
+                      key={policy.id}
+                      style={{
+                        marginBottom: '15px',
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontWeight: '600',
+                          marginBottom: '4px',
+                        }}
+                      >
+                        • {policy.name || policy.fileName}
+                      </p>
+
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: '#64748b',
+                          paddingLeft: '14px',
+                          lineHeight: '1.6',
+                        }}
+                      >
+                        {associatedGuidelines.length > 0
+                          ? `Mapped to: ${associatedGuidelines
+                              .map(
+                                (guideline) =>
+                                  guideline.name
+                              )
+                              .join(', ')}`
+                          : 'No associated guidelines'}
+                      </div>
+                    </div>
                   )
-                )
+                })
               ) : (
-                <p>
-                  • No policies selected
-                </p>
+                <p>• No policies selected</p>
               )}
             </div>
 
             <div className="findings-summary-divider"></div>
 
             <div className="findings-summary-column">
-              <h3>
-                Reference Guidelines
-              </h3>
+              <h3>Reference Guidelines</h3>
 
-              {selectedGuidelines.length >
-              0 ? (
-                selectedGuidelines.map(
-                  (guideline) => (
-                    <p key={guideline.id}>
-                      • {guideline.name}
-                    </p>
+              {selectedGuidelines.length > 0 ? (
+                selectedGuidelines.map((guideline) => {
+                  const associatedPolicies =
+                    getPoliciesForGuideline(
+                      guideline,
+                      selectedPolicies
+                    )
+
+                  return (
+                    <div
+                      key={guideline.id}
+                      style={{
+                        marginBottom: '15px',
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontWeight: '600',
+                          marginBottom: '4px',
+                        }}
+                      >
+                        • {guideline.name}
+                      </p>
+
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: '#64748b',
+                          paddingLeft: '14px',
+                          lineHeight: '1.6',
+                        }}
+                      >
+                        Applies to:{' '}
+                        {associatedPolicies
+                          .map((policy) => policy.name)
+                          .join(', ')}
+                      </div>
+                    </div>
                   )
-                )
+                })
               ) : (
                 <p>
-                  • No guidelines selected
+                  • No automatically associated guidelines
                 </p>
               )}
             </div>
           </section>
 
-          {/* ==================================
-              FILTERS
-          ================================== */}
+          {/* FILTERS */}
 
           <section
             style={{
@@ -877,45 +883,35 @@ function ReviewFindingsPage() {
               },
               {
                 name: 'High Priority',
-                count:
-                  highPriorityCount,
+                count: highPriorityCount,
               },
               {
                 name: 'Low Priority',
-                count:
-                  lowPriorityCount,
+                count: lowPriorityCount,
               },
               {
-                name:
-                  'No Change Needed',
-                count:
-                  noChangeCount,
+                name: 'No Change Needed',
+                count: noChangeCount,
               },
             ].map((filter) => (
               <button
                 key={filter.name}
                 type="button"
                 className={
-                  activeFilter ===
-                  filter.name
+                  activeFilter === filter.name
                     ? 'finding-filter-button active'
                     : 'finding-filter-button'
                 }
                 onClick={() =>
-                  setActiveFilter(
-                    filter.name
-                  )
+                  setActiveFilter(filter.name)
                 }
               >
-                {filter.name} (
-                {filter.count})
+                {filter.name} ({filter.count})
               </button>
             ))}
           </section>
 
-          {/* ==================================
-              RESULTS
-          ================================== */}
+          {/* FINDING CARDS */}
 
           <section
             style={{
@@ -925,328 +921,291 @@ function ReviewFindingsPage() {
               paddingBottom: '30px',
             }}
           >
-            {visibleResults.map(
-              (result) => {
-                const highPriority =
-                  result.priority ===
-                  'High'
+            {visibleResults.map((result) => {
+              const highPriority =
+                result.priority === 'High'
 
-                const noChange =
-                  result.status ===
-                  'No Change Needed'
+              const noChange =
+                result.status === 'No Change Needed'
 
-                const decision =
-                  getDecision(result)
+              const decision = getDecision(result)
 
-                const isAccepted =
-                  decision?.decision ===
-                    'Accepted' ||
-                  decision?.decision ===
-                    'Accepted with Edits'
+              const isAccepted =
+                decision?.decision === 'Accepted' ||
+                decision?.decision ===
+                  'Accepted with Edits'
 
-                const isRejected =
-                  decision?.decision ===
-                  'Rejected'
+              const isRejected =
+                decision?.decision === 'Rejected'
 
-                return (
-                  <div
-                    key={result.id}
-                    style={{
-                      background: '#ffffff',
-
-                      border: decision
-                        ? isAccepted
-                          ? '1px solid #b9d7bd'
-                          : '1px solid #d4d4d4'
-                        : noChange
+              return (
+                <div
+                  key={result.id}
+                  style={{
+                    background: '#ffffff',
+                    border: decision
+                      ? isAccepted
                         ? '1px solid #b9d7bd'
-                        : highPriority
-                        ? '1px solid #dfb0b0'
-                        : '1px solid #e2d0a6',
-
-                      borderLeft: decision
-                        ? isAccepted
-                          ? '5px solid #4e8b59'
-                          : '5px solid #777777'
-                        : noChange
+                        : '1px solid #d4d4d4'
+                      : noChange
+                      ? '1px solid #b9d7bd'
+                      : highPriority
+                      ? '1px solid #dfb0b0'
+                      : '1px solid #e2d0a6',
+                    borderLeft: decision
+                      ? isAccepted
                         ? '5px solid #4e8b59'
-                        : highPriority
-                        ? '5px solid #b53939'
-                        : '5px solid #c18a20',
-
-                      borderRadius: '5px',
-                      padding: '18px 20px',
+                        : '5px solid #777777'
+                      : noChange
+                      ? '5px solid #4e8b59'
+                      : highPriority
+                      ? '5px solid #b53939'
+                      : '5px solid #c18a20',
+                    borderRadius: '5px',
+                    padding: '18px 20px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: '24px',
+                      flexWrap: 'wrap',
                     }}
                   >
                     <div
                       style={{
-                        display: 'flex',
-                        justifyContent:
-                          'space-between',
-                        alignItems:
-                          'flex-start',
-                        gap: '24px',
+                        flex: 1,
+                        minWidth: '250px',
                       }}
                     >
+                      {/* STATUS */}
+
                       <div
                         style={{
-                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                          marginBottom: '9px',
                         }}
                       >
-                        {/* STATUS */}
-
-                        <div
+                        <span
                           style={{
-                            display: 'flex',
-                            alignItems:
-                              'center',
-                            gap: '8px',
-                            flexWrap:
-                              'wrap',
-                            marginBottom:
-                              '9px',
+                            display: 'inline-block',
+                            padding: '4px 9px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            background: noChange
+                              ? '#eaf5ec'
+                              : highPriority
+                              ? '#f9e5e5'
+                              : '#fff2d5',
+                            color: noChange
+                              ? '#387644'
+                              : highPriority
+                              ? '#9f2424'
+                              : '#8a6418',
                           }}
                         >
+                          {result.status}
+                        </span>
+
+                        {!noChange && (
                           <span
                             style={{
-                              display:
-                                'inline-block',
-                              padding:
-                                '4px 9px',
-                              borderRadius:
-                                '12px',
-                              fontSize:
-                                '11px',
-                              fontWeight:
-                                '700',
-                              background:
-                                noChange
-                                  ? '#eaf5ec'
-                                  : highPriority
-                                  ? '#f9e5e5'
-                                  : '#fff2d5',
-                              color:
-                                noChange
-                                  ? '#387644'
-                                  : highPriority
-                                  ? '#9f2424'
-                                  : '#8a6418',
+                              fontSize: '11px',
+                              fontWeight: '700',
+                              color: highPriority
+                                ? '#9f2424'
+                                : '#8a6418',
                             }}
                           >
-                            {result.status}
+                            {result.priority.toUpperCase()}{' '}
+                            PRIORITY
                           </span>
+                        )}
 
-                          {!noChange && (
-                            <span
-                              style={{
-                                fontSize:
-                                  '11px',
-                                fontWeight:
-                                  '700',
-                                color:
-                                  highPriority
-                                    ? '#9f2424'
-                                    : '#8a6418',
-                              }}
-                            >
-                              {result.priority.toUpperCase()}{' '}
-                              PRIORITY
-                            </span>
-                          )}
-
-                          {decision && (
-                            <span
-                              style={{
-                                display:
-                                  'inline-block',
-                                padding:
-                                  '4px 9px',
-                                borderRadius:
-                                  '12px',
-                                fontSize:
-                                  '11px',
-                                fontWeight:
-                                  '700',
-                                background:
-                                  isAccepted
-                                    ? '#eaf5ec'
-                                    : '#eeeeee',
-                                color:
-                                  isAccepted
-                                    ? '#387644'
-                                    : '#555555',
-                              }}
-                            >
-                              {isAccepted
-                                ? '✓ '
-                                : isRejected
-                                ? '✕ '
-                                : ''}
-                              {decision.decision}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* POLICY */}
-
-                        <h2
-                          style={{
-                            fontSize:
-                              '17px',
-                            margin:
-                              '0 0 5px',
-                          }}
-                        >
-                          {result.policy}
-                        </h2>
-
-                        <div
-                          style={{
-                            fontSize:
-                              '12px',
-                            color:
-                              '#777',
-                            marginBottom:
-                              '12px',
-                          }}
-                        >
-                          {result.category}
-                          {'  •  '}
-                          Reference:{' '}
-                          {result.guideline}
-                        </div>
-
-                        {/* SUMMARY */}
-
-                        <p
-                          style={{
-                            margin:
-                              '0 0 12px',
-                            lineHeight:
-                              '1.5',
-                            color:
-                              '#444',
-                          }}
-                        >
-                          {result.summary}
-                        </p>
-
-                        <div
-                          style={{
-                            fontSize:
-                              '12px',
-                            color:
-                              '#777',
-                          }}
-                        >
-                          Policy section:{' '}
-                          <strong>
-                            {
-                              result.policyCriterion
-                            }
-                          </strong>
-                          {'  •  '}
-                          Guideline section:{' '}
-                          <strong>
-                            {
-                              result.guidelineCriterion
-                            }
-                          </strong>
-                        </div>
+                        {decision && (
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              padding: '4px 9px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: '700',
+                              background: isAccepted
+                                ? '#eaf5ec'
+                                : '#eeeeee',
+                              color: isAccepted
+                                ? '#387644'
+                                : '#555555',
+                            }}
+                          >
+                            {isAccepted
+                              ? '✓ '
+                              : isRejected
+                              ? '✕ '
+                              : ''}
+                            {decision.decision}
+                          </span>
+                        )}
                       </div>
 
-                      {/* ACTION */}
+                      {/* POLICY NAME */}
+
+                      <h2
+                        style={{
+                          fontSize: '17px',
+                          margin: '0 0 5px',
+                        }}
+                      >
+                        {result.policy}
+                      </h2>
+
+                      {/* MATCHED GUIDELINE */}
 
                       <div
                         style={{
-                          minWidth:
-                            '190px',
-                          textAlign:
-                            'right',
+                          fontSize: '12px',
+                          color: '#777',
+                          marginBottom: '12px',
                         }}
                       >
-                        {noChange ? (
+                        {result.category}
+                        {'  •  '}
+                        Reference: {result.guideline}
+                      </div>
+
+                      {/* SUMMARY */}
+
+                      <p
+                        style={{
+                          margin: '0 0 12px',
+                          lineHeight: '1.5',
+                          color: '#444',
+                        }}
+                      >
+                        {result.summary}
+                      </p>
+
+                      {/* CRITERIA */}
+
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: '#777',
+                        }}
+                      >
+                        Policy section:{' '}
+                        <strong>
+                          {result.policyCriterion}
+                        </strong>
+
+                        {'  •  '}
+
+                        Guideline section:{' '}
+                        <strong>
+                          {result.guidelineCriterion}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {/* ACTION */}
+
+                    <div
+                      style={{
+                        minWidth: '190px',
+                        textAlign: 'right',
+                      }}
+                    >
+                      {noChange ? (
+                        <div
+                          style={{
+                            color: '#387644',
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            paddingTop: '8px',
+                          }}
+                        >
+                          ✓ No action required
+                        </div>
+                      ) : decision ? (
+                        <div>
                           <div
                             style={{
-                              color:
-                                '#387644',
-                              fontSize:
-                                '13px',
-                              fontWeight:
-                                '700',
-                              paddingTop:
-                                '8px',
+                              fontSize: '13px',
+                              fontWeight: '700',
+                              color: isAccepted
+                                ? '#387644'
+                                : '#555555',
+                              marginBottom: '9px',
                             }}
                           >
-                            ✓ No action required
+                            {isAccepted
+                              ? '✓ Decision recorded'
+                              : '✕ Decision recorded'}
                           </div>
-                        ) : decision ? (
-                          <div>
-                            <div
-                              style={{
-                                fontSize:
-                                  '13px',
-                                fontWeight:
-                                  '700',
-                                color:
-                                  isAccepted
-                                    ? '#387644'
-                                    : '#555555',
-                                marginBottom:
-                                  '9px',
-                              }}
-                            >
-                              {isAccepted
-                                ? '✓ Decision recorded'
-                                : '✕ Decision recorded'}
-                            </div>
 
-                            <button
-                              type="button"
-                              className="view-edit-report-button"
-                              onClick={() =>
-                                openRecommendation(
-                                  result
-                                )
-                              }
-                            >
-                              View Recommendation
-                            </button>
-                          </div>
-                        ) : (
                           <button
                             type="button"
                             className="view-edit-report-button"
                             onClick={() =>
-                              openRecommendation(
-                                result
-                              )
+                              openRecommendation(result)
                             }
                           >
-                            Review Recommendation
+                            View Recommendation
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="view-edit-report-button"
+                          onClick={() =>
+                            openRecommendation(result)
+                          }
+                        >
+                          Review Recommendation
+                        </button>
+                      )}
                     </div>
                   </div>
-                )
-              }
-            )}
+                </div>
+              )
+            })}
 
-            {visibleResults.length ===
-              0 && (
+            {visibleResults.length === 0 && (
               <div
                 style={{
                   padding: '35px',
                   textAlign: 'center',
-                  background:
-                    '#ffffff',
-                  border:
-                    '1px solid #dddddd',
+                  background: '#ffffff',
+                  border: '1px solid #dddddd',
+                  borderRadius: '5px',
+                  color: '#64748b',
+                  lineHeight: '1.6',
                 }}
               >
-                No results match this
-                filter.
+                {results.length === 0 ? (
+                  <>
+                    <strong>
+                      No demonstration findings available.
+                    </strong>
+
+                    <p style={{ marginTop: '8px' }}>
+                      Your selected policies and their mapped
+                      guidelines are listed above. The current
+                      demo only contains example findings for
+                      Cardiac, Diabetes, and Oncology policies.
+                      A screening engine would be needed to
+                      generate findings for other policies.
+                    </p>
+                  </>
+                ) : (
+                  'No results match this filter.'
+                )}
               </div>
             )}
           </section>

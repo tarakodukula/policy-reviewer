@@ -1,3 +1,4 @@
+
 import './App.css'
 import {
   HashRouter,
@@ -19,14 +20,12 @@ import NewGuidelinePage from './pages/NewGuidelinePage'
 import PoliciesPage from './pages/PoliciesPage'
 import NewPolicyPage from './pages/NewPolicyPage'
 import PolicyDetailsPage from './pages/PolicyDetailsPage'
-
+import AuditLogPage from './pages/AuditLogPage'
 
 function App() {
   return (
     <HashRouter>
-
       <Routes>
-
         <Route
           path="/login"
           element={<LoginPage />}
@@ -93,6 +92,11 @@ function App() {
         />
 
         <Route
+          path="/audit-log"
+          element={<AuditLogPage />}
+        />
+
+        <Route
           path="/"
           element={
             <Navigate
@@ -101,9 +105,7 @@ function App() {
             />
           }
         />
-
       </Routes>
-
     </HashRouter>
   )
 }

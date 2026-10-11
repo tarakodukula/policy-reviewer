@@ -1,79 +1,87 @@
+
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { getPoliciesForGuideline } from '../data/guidelineMappings'
 
 function GuidelinesPage() {
-  const navigate = useNavigate()
-
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
 
-  // Remember guidelines that have been deleted
+  // ==========================================
+  // READ SAVED DATABASE DATA SAFELY
+  // ==========================================
 
-  const [deletedGuidelineIds, setDeletedGuidelineIds] = useState(
-    JSON.parse(
-      localStorage.getItem('deletedGuidelineIds')
-    ) || []
-  )
+  function getSavedArray(key) {
+    try {
+      const data = JSON.parse(localStorage.getItem(key))
+      return Array.isArray(data) ? data : []
+    } catch {
+      return []
+    }
+  }
+
+  // ==========================================
+  // ORIGINAL POLICIES
+  // ==========================================
+
+  const originalPolicies = [
+    { id: 1, name: 'Cardiac Coverage Policy' },
+    { id: 2, name: 'Diabetes Treatment Policy' },
+    { id: 3, name: 'Oncology Coverage Policy' },
+    { id: 4, name: 'Orthopedic Surgery Policy' },
+    { id: 5, name: 'Mental Health Coverage Policy' },
+  ]
 
   // ==========================================
   // ORIGINAL GUIDELINES
   // ==========================================
 
-  const guidelines = [
+  const originalGuidelines = [
     {
       id: 1,
       name: 'Cardiac Coverage Guideline',
-      description:
-        'Policy review for cardiac procedures and treatments.',
+      description: 'Policy review for cardiac procedures and treatments.',
       created: 'Sep 23, 2026',
       createdAge: '2 days ago',
       updated: 'Sep 23, 2026',
       updatedAge: '2 days ago',
       status: 'In Review',
     },
-
     {
       id: 2,
       name: 'Diabetes Treatment Guideline',
-      description:
-        'Policy review for diabetes management and treatment.',
+      description: 'Policy review for diabetes management and treatment.',
       created: 'Sep 18, 2026',
       createdAge: '6 days ago',
       updated: 'Sep 18, 2026',
       updatedAge: '6 days ago',
       status: 'Completed',
     },
-
     {
       id: 3,
       name: 'Oncology Coverage Guideline',
-      description:
-        'Policy review for oncology services and treatments.',
+      description: 'Policy review for oncology services and treatments.',
       created: 'Sep 10, 2026',
       createdAge: '14 days ago',
       updated: 'Sep 10, 2026',
       updatedAge: '14 days ago',
       status: 'Completed',
     },
-
     {
       id: 4,
       name: 'Orthopedic Surgery Guideline',
-      description:
-        'Policy review for orthopedic procedures and rehab.',
+      description: 'Policy review for orthopedic procedures and rehab.',
       created: 'Sep 5, 2026',
       createdAge: '19 days ago',
       updated: 'Sep 5, 2026',
       updatedAge: '19 days ago',
       status: 'In Review',
     },
-
     {
       id: 5,
       name: 'Mental Health Guideline',
-      description:
-        'Policy review for mental health services and treatment.',
+      description: 'Policy review for mental health services and treatment.',
       created: 'Aug 28, 2026',
       createdAge: '27 days ago',
       updated: 'Aug 28, 2026',
@@ -83,131 +91,95 @@ function GuidelinesPage() {
   ]
 
   // ==========================================
-  // GET UPLOADED GUIDELINES
+  // LOAD POLICIES FROM DATABASE
   // ==========================================
 
-  const addedGuidelines =
-    JSON.parse(
-      localStorage.getItem('addedGuidelines')
-    ) || []
+  const addedPolicies = getSavedArray('addedPolicies')
+  const deletedPolicyIds = getSavedArray('deletedPolicyIds')
 
-  // ==========================================
-  // COMBINE ALL GUIDELINES
-  // ==========================================
-
-  const allGuidelines = [
-    ...addedGuidelines,
-    ...guidelines,
+  const allPolicies = [
+    ...addedPolicies,
+    ...originalPolicies,
   ].filter(
-    (guideline) =>
-      !deletedGuidelineIds.includes(
-        guideline.id
+    (policy) =>
+      !deletedPolicyIds.some(
+        (id) => String(id) === String(policy.id)
       )
   )
 
   // ==========================================
-  // DELETE GUIDELINE
+  // LOAD GUIDELINES FROM DATABASE
   // ==========================================
 
-  function deleteGuideline(id, name) {
-    const confirmed =
-      window.confirm(
-        `Are you sure you want to delete "${name}"?`
+  const addedGuidelines = getSavedArray('addedGuidelines')
+  const deletedGuidelineIds = getSavedArray('deletedGuidelineIds')
+
+  const allGuidelines = [
+    ...addedGuidelines,
+    ...originalGuidelines,
+  ].filter(
+    (guideline) =>
+      !deletedGuidelineIds.some(
+        (id) => String(id) === String(guideline.id)
       )
-
-    if (!confirmed) {
-      return
-    }
-
-    const savedGuidelines =
-      JSON.parse(
-        localStorage.getItem(
-          'addedGuidelines'
-        )
-      ) || []
-
-    const updatedSavedGuidelines =
-      savedGuidelines.filter(
-        (guideline) =>
-          guideline.id !== id
-      )
-
-    localStorage.setItem(
-      'addedGuidelines',
-      JSON.stringify(
-        updatedSavedGuidelines
-      )
-    )
-
-    const updatedDeletedIds = [
-      ...deletedGuidelineIds,
-      id,
-    ]
-
-    setDeletedGuidelineIds(
-      updatedDeletedIds
-    )
-
-    localStorage.setItem(
-      'deletedGuidelineIds',
-      JSON.stringify(
-        updatedDeletedIds
-      )
-    )
-  }
+  )
 
   // ==========================================
   // SEARCH + FILTER + SORT
   // ==========================================
 
-  const visibleGuidelines =
-    allGuidelines
-      .filter((guideline) => {
-        const matchesSearch =
-          guideline.name
-            .toLowerCase()
-            .includes(
-              search.toLowerCase()
-            )
+  const visibleGuidelines = allGuidelines
+    .filter((guideline) => {
+      const associatedPolicies = getPoliciesForGuideline(
+        guideline,
+        allPolicies
+      )
 
-        const matchesFilter =
-          filter === 'All' ||
-          guideline.status === filter
+      const searchText = [
+        guideline.name,
+        guideline.description || '',
+        ...associatedPolicies.map((policy) => policy.name),
+      ]
+        .join(' ')
+        .toLowerCase()
 
-        return (
-          matchesSearch &&
-          matchesFilter
-        )
-      })
+      const matchesSearch = searchText.includes(
+        search.toLowerCase()
+      )
 
-      .sort((a, b) => {
-        if (sort === 'Oldest') {
-          return (
-            new Date(a.created) -
-            new Date(b.created)
-          )
-        }
+      const matchesFilter =
+        filter === 'All' || guideline.status === filter
 
-        return (
-          new Date(b.created) -
-          new Date(a.created)
-        )
-      })
+      return matchesSearch && matchesFilter
+    })
+    .sort((a, b) => {
+      const firstDate = new Date(
+        a.created || a.date || 0
+      ).getTime()
+
+      const secondDate = new Date(
+        b.created || b.date || 0
+      ).getTime()
+
+      if (sort === 'Oldest') {
+        return firstDate - secondDate
+      }
+
+      return secondDate - firstDate
+    })
+
+  // ==========================================
+  // PAGE
+  // ==========================================
 
   return (
     <div className="app-page">
-      {/* ======================================
-          TOP BAR
-      ====================================== */}
+      {/* TOP BAR */}
 
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">
-            Policy Review
-          </span>
-
+          <span className="brand-name">Policy Review</span>
           <span className="brand-divider"></span>
-
           <span className="workspace-name">
             Policy Review Workspace
           </span>
@@ -215,60 +187,36 @@ function GuidelinesPage() {
 
         <div className="top-right">
           <div className="search-box">
-            <span>
-              ⌕
-            </span>
-
+            <span>⌕</span>
             <input
               type="text"
               placeholder="Search policies, guidelines..."
             />
           </div>
 
-          <span className="top-icon">
-            ?
-          </span>
-
-          <span className="top-icon">
-            ⚙
-          </span>
+          <span className="top-icon">?</span>
+          <span className="top-icon">⚙</span>
 
           <div className="user-area">
-            <div className="user-avatar">
-              SC
-            </div>
-
-            <span>
-              Sarah Chen
-            </span>
+            <div className="user-avatar">SC</div>
+            <span>Sarah Chen</span>
           </div>
         </div>
       </header>
 
       <div className="app-body">
-        {/* ======================================
-            SIDEBAR
-        ====================================== */}
+        {/* SIDEBAR */}
 
         <aside className="sidebar">
-          <Link
-            to="/dashboard"
-            className="nav-item"
-          >
+          <Link to="/dashboard" className="nav-item">
             Dashboard
           </Link>
 
-          <Link
-            to="/reviews"
-            className="nav-item"
-          >
+          <Link to="/reviews" className="nav-item">
             Review Sessions
           </Link>
 
-          <Link
-            to="/policies"
-            className="nav-item"
-          >
+          <Link to="/policies" className="nav-item">
             Policy Database
           </Link>
 
@@ -278,59 +226,43 @@ function GuidelinesPage() {
           >
             Guideline Database
           </Link>
+
+          <Link to="/audit-log" className="nav-item">
+            Audit Log
+          </Link>
         </aside>
 
-        {/* ======================================
-            MAIN PAGE
-        ====================================== */}
+        {/* MAIN PAGE */}
 
         <main className="guidelines-content">
-          <h1>
-            Guidelines
-          </h1>
+          <h1>Guidelines</h1>
 
           <p className="guidelines-subtitle">
-            View and manage your guidelines. Each entry contains a
-            guideline with a log of all versions of that guideline over time.
+            Reference guidelines and the policies they align with.
+            Guidelines are provided by the system and cannot be
+            uploaded or deleted from this page.
           </p>
 
-          {/* ==================================
-              CONTROLS
-          ================================== */}
+          {/* CONTROLS */}
 
           <div className="guidelines-controls">
-            {/* SEARCH */}
-
             <div className="guidelines-search">
-              <span>
-                ⌕
-              </span>
-
+              <span>⌕</span>
               <input
                 type="text"
-                placeholder="Search guidelines..."
+                placeholder="Search guidelines or policies..."
                 value={search}
                 onChange={(event) =>
-                  setSearch(
-                    event.target.value
-                  )
+                  setSearch(event.target.value)
                 }
               />
             </div>
 
-            {/* FILTER BUTTONS */}
-
             <div className="guidelines-filter-buttons">
               <button
                 type="button"
-                className={
-                  filter === 'All'
-                    ? 'active'
-                    : ''
-                }
-                onClick={() =>
-                  setFilter('All')
-                }
+                className={filter === 'All' ? 'active' : ''}
+                onClick={() => setFilter('All')}
               >
                 All
               </button>
@@ -338,15 +270,9 @@ function GuidelinesPage() {
               <button
                 type="button"
                 className={
-                  filter === 'In Review'
-                    ? 'active'
-                    : ''
+                  filter === 'In Review' ? 'active' : ''
                 }
-                onClick={() =>
-                  setFilter(
-                    'In Review'
-                  )
-                }
+                onClick={() => setFilter('In Review')}
               >
                 In Review
               </button>
@@ -354,166 +280,131 @@ function GuidelinesPage() {
               <button
                 type="button"
                 className={
-                  filter === 'Completed'
-                    ? 'active'
-                    : ''
+                  filter === 'Completed' ? 'active' : ''
                 }
-                onClick={() =>
-                  setFilter(
-                    'Completed'
-                  )
-                }
+                onClick={() => setFilter('Completed')}
               >
                 Completed
               </button>
             </div>
 
-            {/* SORT */}
-
             <div className="guidelines-sort">
-              <span>
-                Sort by
-              </span>
+              <span>Sort by</span>
 
               <select
                 value={sort}
                 onChange={(event) =>
-                  setSort(
-                    event.target.value
-                  )
+                  setSort(event.target.value)
                 }
               >
-                <option>
-                  Most recent
-                </option>
-
-                <option>
-                  Oldest
-                </option>
+                <option>Most recent</option>
+                <option>Oldest</option>
               </select>
             </div>
           </div>
 
-          {/* ==================================
-              GUIDELINES TABLE
-          ================================== */}
+          {/* GUIDELINES TABLE */}
 
           <div className="guidelines-table">
-            {/* TABLE HEADER */}
-
             <div className="guidelines-table-header">
-              <div>
-                GUIDELINE NAME
-              </div>
-
-              <div>
-                DATE CREATED
-              </div>
-
-              <div>
-                LAST UPDATED
-              </div>
-
-              <div>
-                STATUS
-              </div>
+              <div>GUIDELINE NAME</div>
+              <div>DATE CREATED</div>
+              <div>LAST UPDATED</div>
+              <div>ASSOCIATED POLICIES</div>
             </div>
 
-            {/* TABLE ROWS */}
+            {visibleGuidelines.map((guideline) => {
+              const associatedPolicies = getPoliciesForGuideline(
+                guideline,
+                allPolicies
+              )
 
-            {visibleGuidelines.map(
-              (guideline) => (
+              return (
                 <div
                   className="guidelines-table-row"
                   key={guideline.id}
                 >
-                  {/* GUIDELINE NAME */}
-
                   <div className="guideline-name-cell">
-                    <strong>
-                      {guideline.name}
-                    </strong>
-
-                    <p>
-                      {guideline.description}
-                    </p>
+                    <strong>{guideline.name}</strong>
+                    <p>{guideline.description}</p>
                   </div>
-
-                  {/* DATE CREATED */}
 
                   <div className="guideline-date-cell">
                     <span>
-                      {guideline.created}
+                      {guideline.created ||
+                        guideline.date ||
+                        'Recently'}
                     </span>
-
                     <small>
-                      {guideline.createdAge}
+                      {guideline.createdAge ||
+                        guideline.age ||
+                        ''}
                     </small>
                   </div>
-
-                  {/* LAST UPDATED */}
 
                   <div className="guideline-date-cell">
                     <span>
-                      {guideline.updated}
+                      {guideline.updated ||
+                        guideline.date ||
+                        'Recently'}
                     </span>
-
                     <small>
-                      {guideline.updatedAge}
+                      {guideline.updatedAge || ''}
                     </small>
                   </div>
-
-                  {/* STATUS + DELETE */}
 
                   <div className="guideline-status-actions">
-                    <span
-                      className={
-                        guideline.status ===
-                        'Completed'
-                          ? 'status completed'
-                          : 'status in-review'
-                      }
-                    >
-                      {guideline.status}
-                    </span>
-
-                    <button
-                      type="button"
-                      className="delete-guideline-button"
-                      onClick={() =>
-                        deleteGuideline(
-                          guideline.id,
-                          guideline.name
-                        )
-                      }
-                    >
-                      Delete
-                    </button>
+                    {associatedPolicies.length > 0 ? (
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-start',
+                          gap: '7px',
+                        }}
+                      >
+                        {associatedPolicies.map((policy) => (
+                          <Link
+                            key={policy.id}
+                            to={`/policies/${policy.id}`}
+                            style={{
+                              color: '#0078bf',
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                            }}
+                          >
+                            {policy.name}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <span
+                        style={{
+                          color: '#777',
+                          fontSize: '13px',
+                        }}
+                      >
+                        No mapped policies
+                      </span>
+                    )}
                   </div>
                 </div>
               )
-            )}
+            })}
           </div>
 
-          {/* ==================================
-              NEW GUIDELINE BUTTON
-          ================================== */}
-
-          <button
-            type="button"
-            className="new-guideline-button"
-            onClick={() =>
-              navigate(
-                '/guidelines/new'
-              )
-            }
-          >
-            New Guideline
-
-            <span>
-              ＋
-            </span>
-          </button>
+          {visibleGuidelines.length === 0 && (
+            <div
+              style={{
+                padding: '30px',
+                textAlign: 'center',
+                color: '#777',
+              }}
+            >
+              No guidelines match your search or filter.
+            </div>
+          )}
         </main>
       </div>
     </div>
