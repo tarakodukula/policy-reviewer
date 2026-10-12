@@ -154,11 +154,11 @@ function GuidelinesPage() {
     })
     .sort((a, b) => {
       const firstDate = new Date(
-        a.created || a.date || 0
+        a.createdAt || a.created || a.date || 0
       ).getTime()
 
       const secondDate = new Date(
-        b.created || b.date || 0
+        b.createdAt || b.created || b.date || 0
       ).getTime()
 
       if (sort === 'Oldest') {
@@ -178,8 +178,12 @@ function GuidelinesPage() {
 
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">Policy Review</span>
+          <span className="brand-name">
+            Policy Review
+          </span>
+
           <span className="brand-divider"></span>
+
           <span className="workspace-name">
             Policy Review Workspace
           </span>
@@ -188,6 +192,7 @@ function GuidelinesPage() {
         <div className="top-right">
           <div className="search-box">
             <span>⌕</span>
+
             <input
               type="text"
               placeholder="Search policies, guidelines..."
@@ -235,19 +240,52 @@ function GuidelinesPage() {
         {/* MAIN PAGE */}
 
         <main className="guidelines-content">
-          <h1>Guidelines</h1>
+          {/* PAGE HEADING AND UPLOAD BUTTON */}
 
-          <p className="guidelines-subtitle">
-            Reference guidelines and the policies they align with.
-            Guidelines are provided by the system and cannot be
-            uploaded or deleted from this page.
-          </p>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '16px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div>
+              <h1>Guidelines</h1>
+
+              <p className="guidelines-subtitle">
+                Reference guidelines and the policies they align with.
+                Upload new guidelines directly into the Guideline Database.
+              </p>
+            </div>
+
+            {/* NEW: UPLOAD GUIDELINE BUTTON */}
+
+            <Link
+              to="/guidelines/new"
+              style={{
+                display: 'inline-block',
+                background: '#0078bf',
+                color: 'white',
+                padding: '12px 20px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              + Upload Guideline
+            </Link>
+          </div>
 
           {/* CONTROLS */}
 
           <div className="guidelines-controls">
             <div className="guidelines-search">
               <span>⌕</span>
+
               <input
                 type="text"
                 placeholder="Search guidelines or policies..."
@@ -335,6 +373,7 @@ function GuidelinesPage() {
                         guideline.date ||
                         'Recently'}
                     </span>
+
                     <small>
                       {guideline.createdAge ||
                         guideline.age ||
@@ -348,6 +387,7 @@ function GuidelinesPage() {
                         guideline.date ||
                         'Recently'}
                     </span>
+
                     <small>
                       {guideline.updatedAge || ''}
                     </small>

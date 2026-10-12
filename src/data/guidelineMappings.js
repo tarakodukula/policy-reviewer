@@ -2,11 +2,11 @@
 /*
   Shared policy-to-guideline mappings.
 
-  These are demonstration associations for the
-  five original policies and guidelines.
+  Original associations are used by default.
 
-  Future guidelines can define their own policyIds
-  when supplied by the system.
+  Users can manually change the associations.
+  Manual changes are saved in localStorage and
+  used throughout the policy review workflow.
 */
 
 // ==========================================
@@ -37,20 +37,138 @@ export const defaultGuidelineMappings = [
 ]
 
 // ==========================================
+// READ SAVED MANUAL MAPPINGS
+// ==========================================
+
+function getSavedMappings() {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem('manualGuidelineMappings')
+    )
+
+    if (
+      saved &&
+      typeof saved === 'object' &&
+      !Array.isArray(saved)
+    ) {
+      return saved
+    }
+
+    return {}
+  } catch {
+    return {}
+  }
+}
+
+// ==========================================
 // GET POLICIES ASSOCIATED WITH A GUIDELINE
 // ==========================================
 
 export function getGuidelinePolicyIds(guideline) {
+  const savedMappings = getSavedMappings()
+
+  const guidelineId = String(guideline.id)
+
+  // A manually saved mapping takes priority.
+  // An empty array means the user deliberately
+  // removed all associations.
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      savedMappings,
+      guidelineId
+    )
+  ) {
+    return Array.isArray(savedMappings[guidelineId])
+      ? savedMappings[guidelineId]
+      : []
+  }
+
+  // Newly added guidelines may already contain
+  // their associated policy IDs.
+
   if (Array.isArray(guideline.policyIds)) {
     return guideline.policyIds
   }
 
+  // Otherwise, use the original demo mapping.
+
   const defaultMapping = defaultGuidelineMappings.find(
     (mapping) =>
-      String(mapping.guidelineId) === String(guideline.id)
+      String(mapping.guidelineId) === guidelineId
   )
 
   return defaultMapping?.policyIds || []
+}
+
+// ==========================================
+// SAVE POLICIES FOR ONE GUIDELINE
+// ==========================================
+
+export function saveGuidelinePolicyIds(
+  guidelineId,
+  policyIds
+) {
+  const savedMappings = getSavedMappings()
+
+  const uniquePolicyIds = [
+    ...new Set(policyIds.map((id) => String(id))),
+  ]
+
+  savedMappings[String(guidelineId)] = uniquePolicyIds
+
+  localStorage.setItem(
+    'manualGuidelineMappings',
+    JSON.stringify(savedMappings)
+  )
+}
+
+// ==========================================
+// SAVE GUIDELINES FOR ONE POLICY
+// ==========================================
+
+export function saveGuidelinesForPolicy(
+  policy,
+  selectedGuidelineIds,
+  allGuidelines
+) {
+  const policyId = String(policy.id)
+
+  const selectedIds = new Set(
+    selectedGuidelineIds.map((id) => String(id))
+  )
+
+  const savedMappings = getSavedMappings()
+
+  // Update this policy's association for every
+  // available guideline. Keep associations with
+  // other policies unchanged.
+
+  allGuidelines.forEach((guideline) => {
+    const guidelineId = String(guideline.id)
+
+    const currentPolicyIds =
+      getGuidelinePolicyIds(guideline).map((id) =>
+        String(id)
+      )
+
+    const otherPolicyIds = currentPolicyIds.filter(
+      (id) => id !== policyId
+    )
+
+    if (selectedIds.has(guidelineId)) {
+      otherPolicyIds.push(policyId)
+    }
+
+    savedMappings[guidelineId] = [
+      ...new Set(otherPolicyIds),
+    ]
+  })
+
+  localStorage.setItem(
+    'manualGuidelineMappings',
+    JSON.stringify(savedMappings)
+  )
 }
 
 // ==========================================
@@ -88,6 +206,7 @@ export function getGuidelinesForPolicies(
   )
 
   // Prevent duplicate guidelines.
+
   return matchingGuidelines.filter(
     (guideline, index, array) =>
       array.findIndex(
