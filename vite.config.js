@@ -1,8 +1,8 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-// https://vite.dev/config/
+// Use the correct base path for each hosting platform
 export default defineConfig({
   plugins: [react()],
-  base: '/policy-reviewer/',
+  base: process.env.VERCEL ? '/' : '/policy-reviewer/',
 })
